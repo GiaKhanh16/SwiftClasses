@@ -13,6 +13,9 @@ struct TabScreen: View {
 				 Tab("Students", systemImage: "person.2") {
 						StudentView()
 				 }
+				 Tab("Overview", systemImage: "apple.intelligence") {
+						TheObserver()
+				 }
 			}
 	 }
 }

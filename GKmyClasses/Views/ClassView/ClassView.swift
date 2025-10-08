@@ -1,33 +1,42 @@
-	 //
-	 //  ClassView.swift
-	 //  GKAttendance
-	 //
-	 //  Created by Khanh Nguyen on 10/4/25.
-	 //
 import SwiftUI
 import SwiftData
 
 struct ClassView: View {
-	 @State private var addClassBool: Bool = false
+	 @Environment(\.modelContext) var modelContext
+	 @State private var path: [ClassModel] = []
 	 @Query var classes: [ClassModel]
 
 	 var body: some View {
-			NavigationStack {
-				 List(classes) { item in
-						NavigationLink(value: item) {
-							 VStack(alignment: .leading, spacing: 9) {
-									Text(item.name)
-									Text(item.classDescription)
-										 .font(.footnote)
-										 .foregroundStyle(.gray)
+			NavigationStack(path: $path) {   // ✅ attach the path binding here
+				 List {
+						ForEach(classes) { item in
+							 NavigationLink(value: item) {
+									VStack(alignment: .leading, spacing: 9) {
+										 Text(item.name)
+										 Text(item.classDescription)
+												.font(.footnote)
+												.foregroundStyle(.gray)
+									}
 							 }
 						}
+						.onDelete(perform: deleteClass)
 				 }
 				 .navigationTitle("Classes")
 				 .toolbar {
+						EditButton()
 						Button {
 							 withAnimation {
-									addClassBool.toggle()
+									let newClass = ClassModel(
+										 name: "...",
+										 classDescription: "...",
+										 attendances: []
+									)
+									path.append(newClass)
+									Task {
+										 try await Task.sleep(nanoseconds: 500_000_000) // 0.5 sec
+										 modelContext.insert(newClass)
+									}
+
 							 }
 						} label: {
 							 Image(systemName: "plus")
@@ -36,54 +45,22 @@ struct ClassView: View {
 				 .navigationDestination(for: ClassModel.self) { classModel in
 						DetailClassView(classModel: classModel)
 							 .toolbar(.hidden, for: .tabBar)
-				 }
-				 .sheet(isPresented: $addClassBool) {
-						AddClassView()
-				 }
-			}
-	 }
-}
 
-struct AddClassView: View {
-	 @State private var nameText: String = ""
-	 @State private var descriptionText: String = ""
 
-	 @Environment(\.dismiss) var dismiss
-	 @Environment(\.modelContext) var modelContext
-
-	 var body: some View {
-			NavigationStack {
-				 Form {
-						Section("Name") {
-							 TextField("Advance morning class", text: $nameText)
-						}
-						Section("Description") {
-							 TextField("Only 10 UTR and above...", text: $descriptionText)
-						}
-				 }
-				 .navigationTitle("Add")
-				 .toolbar {
-						Button {
-							 addClass()
-							 dismiss()
-						} label: {
-							 Image(systemName: "checkmark")
-						}
 				 }
 			}
 	 }
-
-	 func addClass() {
-			let newClass = ClassModel(
-				 name: nameText,
-				 classDescription: descriptionText,
-				 attendances: []
-			)
-			modelContext.insert(newClass)
-
-			try? modelContext.save()
+	 private func deleteClass(at offsets: IndexSet) {
+			for index in offsets {
+				 let classToDelete = classes[index]
+				 modelContext.delete(classToDelete)
+			}
+				 try? modelContext.save()
 	 }
 }
+
+
+
 
 
 
@@ -149,9 +126,14 @@ struct DetailClassView: View {
 
 	 var body: some View {
 			Form {
-				 Section("Name and Description") {
+				 Section {
 						TextField("Advance morning class", text: $classModel.name)
 						TextField("Only 10 UTR and above...", text: $classModel.classDescription)
+				 }
+				 header: {
+						Text("Name and Description")
+							 .font(.callout)
+							 .fontWeight(.semibold)
 				 }
 
 				 Section {
@@ -199,28 +181,27 @@ struct DetailClassView: View {
 									.padding(.vertical, 4)
 							 }
 						Button {
-							 filteredAttendance.students.append(StudentModel(name: "Khanh", age: 15, level: "Strong"))
+							 addStudentBool.toggle()
 						} label: {
 							 Label("Add a New Student", systemImage: "plus")
 						}
-						Button {
-							 filteredAttendance.students.append(StudentModel(name: "Alex", age: 15, level: "Strong"))
-						} label: {
-							 Label("Add a New Student", systemImage: "plus")
-						}
+
 
 
 				 } header: {
-						Text("Students List")
-							 .font(.headline)
+						Text("Attendance")
+							 .font(.callout)
+							 .fontWeight(.semibold)
 				 } footer: {
 						Text("Search for student first before you add a new student.")
+							 .font(.caption)
 				 }
 
 
 			}
 			.navigationTitle("Details")
 			.toolbar {
+
 				 Button {
 						allAttendance.toggle()
 				 } label: {

@@ -66,6 +66,24 @@ struct StudentDetailView: View {
 						Section("Level") {
 							 TextField("Intermediate", text: $student.level)
 						}
+						Section("Attendance History") {
+							 if student.attendances.isEmpty {
+									Text("No attendance records yet.")
+										 .foregroundStyle(.secondary)
+							 } else {
+									ForEach(student.attendances.sorted(by: { $0.date > $1.date })) { attendance in
+										 if let classModel = attendance.classModel {
+												VStack(alignment: .leading, spacing: 4) {
+													 Text(classModel.name)
+															.font(.headline)
+													 Text(attendance.date, style: .date)
+															.font(.subheadline)
+															.foregroundStyle(.secondary)
+												}
+										 }
+									}
+							 }
+						}
 				 }
 				 .listSectionSpacing(.custom(0))
 				 .navigationTitle("Details")
@@ -126,6 +144,7 @@ struct AddStudentView: View {
 						Section("Level") {
 							 TextField("Intermediate", text: $level)
 						}
+						
 				 }
 				 .navigationTitle("Add Student")
 				 .toolbar {
