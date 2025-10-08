@@ -7,7 +7,7 @@ struct ClassView: View {
 	 @Query var classes: [ClassModel]
 
 	 var body: some View {
-			NavigationStack(path: $path) {   // ✅ attach the path binding here
+			NavigationStack(path: $path) {   
 				 List {
 						ForEach(classes) { item in
 							 NavigationLink(value: item) {
@@ -33,7 +33,7 @@ struct ClassView: View {
 									)
 									path.append(newClass)
 									Task {
-										 try await Task.sleep(nanoseconds: 500_000_000) // 0.5 sec
+										 try await Task.sleep(nanoseconds: 500_000_000)
 										 modelContext.insert(newClass)
 									}
 
@@ -75,8 +75,9 @@ struct DetailClassView: View {
 	 @State private var searchText: String = ""
 	 @State private var selectDate = Date()
 	 @State private var selectedStudents: [StudentModel] = []
-
+	 @State private var staffString: String = ""
 	 @State var allAttendance: Bool = false
+	 @State private var saveWorkItem: DispatchWorkItem?
 
 	 private func attendanceIndex(for date: Date) -> Int {
 			if let index = classModel.attendances.firstIndex(where: { Calendar.current.isDate($0.date, inSameDayAs: date) }) {
@@ -142,7 +143,12 @@ struct DetailClassView: View {
 							 selection: $selectDate,
 							 displayedComponents: .date
 						).onChange(of: selectDate) { _, newDate in
-							 _ = attendanceIndex(for: newDate)
+							 let _ = attendanceIndex(for: newDate)
+							 staffString = filteredAttendance.staff
+							 if filteredAttendance.staff.isEmpty {
+									staffString = ""
+							 }
+
 						}
 				 }
 
@@ -196,7 +202,31 @@ struct DetailClassView: View {
 						Text("Search for student first before you add a new student.")
 							 .font(.caption)
 				 }
+				 Section {
+						TextField("Coaches...", text: $staffString)
+							 .onChange(of: staffString) { _, newValue in
+									filteredAttendance.staff = newValue
 
+									saveWorkItem?.cancel()
+
+									let workItem = DispatchWorkItem {
+										 do {
+												try modelContext.save()
+												print("Staff saved ✅")
+										 } catch {
+												print("Failed to save staff: \(error)")
+										 }
+									}
+									saveWorkItem = workItem
+									DispatchQueue.main.asyncAfter(deadline: .now() + 0.7, execute: workItem)
+							 }
+
+
+				 } header: {
+						Text("Staff")
+							 .font(.callout)
+							 .fontWeight(.semibold)
+				 }
 
 			}
 			.navigationTitle("Details")
