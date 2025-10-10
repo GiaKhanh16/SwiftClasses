@@ -6,8 +6,15 @@
 	objectVersion = 77;
 	objects = {
 
+/* Begin PBXBuildFile section */
+		E29A97292E98E75E0068E263 /* StoreKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = E29A97282E98E75E0068E263 /* StoreKit.framework */; };
+		E29A972D2E98EA380068E263 /* SwiftClasses.storekit in Resources */ = {isa = PBXBuildFile; fileRef = E29A972C2E98EA380068E263 /* SwiftClasses.storekit */; };
+/* End PBXBuildFile section */
+
 /* Begin PBXFileReference section */
-		E244E7AC2E943613009F08FE /* GKmyClasses.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = GKmyClasses.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		E244E7AC2E943613009F08FE /* SwiftClasses.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = SwiftClasses.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		E29A97282E98E75E0068E263 /* StoreKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = StoreKit.framework; path = System/Library/Frameworks/StoreKit.framework; sourceTree = SDKROOT; };
+		E29A972C2E98EA380068E263 /* SwiftClasses.storekit */ = {isa = PBXFileReference; lastKnownFileType = text; path = SwiftClasses.storekit; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
@@ -23,6 +30,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				E29A97292E98E75E0068E263 /* StoreKit.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -32,7 +40,9 @@
 		E244E7A32E943613009F08FE = {
 			isa = PBXGroup;
 			children = (
+				E29A972C2E98EA380068E263 /* SwiftClasses.storekit */,
 				E244E7AE2E943613009F08FE /* GKmyClasses */,
+				E29A97272E98E75E0068E263 /* Frameworks */,
 				E244E7AD2E943613009F08FE /* Products */,
 			);
 			sourceTree = "<group>";
@@ -40,17 +50,25 @@
 		E244E7AD2E943613009F08FE /* Products */ = {
 			isa = PBXGroup;
 			children = (
-				E244E7AC2E943613009F08FE /* GKmyClasses.app */,
+				E244E7AC2E943613009F08FE /* SwiftClasses.app */,
 			);
 			name = Products;
+			sourceTree = "<group>";
+		};
+		E29A97272E98E75E0068E263 /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+				E29A97282E98E75E0068E263 /* StoreKit.framework */,
+			);
+			name = Frameworks;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
-		E244E7AB2E943613009F08FE /* GKmyClasses */ = {
+		E244E7AB2E943613009F08FE /* SwiftClasses */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = E244E7B72E943614009F08FE /* Build configuration list for PBXNativeTarget "GKmyClasses" */;
+			buildConfigurationList = E244E7B72E943614009F08FE /* Build configuration list for PBXNativeTarget "SwiftClasses" */;
 			buildPhases = (
 				E244E7A82E943613009F08FE /* Sources */,
 				E244E7A92E943613009F08FE /* Frameworks */,
@@ -63,11 +81,11 @@
 			fileSystemSynchronizedGroups = (
 				E244E7AE2E943613009F08FE /* GKmyClasses */,
 			);
-			name = GKmyClasses;
+			name = SwiftClasses;
 			packageProductDependencies = (
 			);
 			productName = GKmyClasses;
-			productReference = E244E7AC2E943613009F08FE /* GKmyClasses.app */;
+			productReference = E244E7AC2E943613009F08FE /* SwiftClasses.app */;
 			productType = "com.apple.product-type.application";
 		};
 /* End PBXNativeTarget section */
@@ -85,7 +103,7 @@
 					};
 				};
 			};
-			buildConfigurationList = E244E7A72E943613009F08FE /* Build configuration list for PBXProject "GKmyClasses" */;
+			buildConfigurationList = E244E7A72E943613009F08FE /* Build configuration list for PBXProject "SwiftClasses" */;
 			developmentRegion = en;
 			hasScannedForEncodings = 0;
 			knownRegions = (
@@ -99,7 +117,7 @@
 			projectDirPath = "";
 			projectRoot = "";
 			targets = (
-				E244E7AB2E943613009F08FE /* GKmyClasses */,
+				E244E7AB2E943613009F08FE /* SwiftClasses */,
 			);
 		};
 /* End PBXProject section */
@@ -109,6 +127,7 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				E29A972D2E98EA380068E263 /* SwiftClasses.storekit in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -249,25 +268,28 @@
 		E244E7B82E943614009F08FE /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_APPICON_NAME = Logo;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				ASSETCATALOG_COMPILER_INCLUDE_ALL_APPICON_ASSETS = NO;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = F858BJS7R5;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_KEY_CFBundleDisplayName = SwiftClasses;
+				INFOPLIST_KEY_LSApplicationCategoryType = "";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				IPHONEOS_DEPLOYMENT_TARGET = 26.0;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
 				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = khanh.GKmyClasses;
+				PRODUCT_BUNDLE_IDENTIFIER = SwiftClasses;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				STRING_CATALOG_GENERATE_SYMBOLS = YES;
 				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
@@ -286,25 +308,28 @@
 		E244E7B92E943614009F08FE /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_APPICON_NAME = Logo;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				ASSETCATALOG_COMPILER_INCLUDE_ALL_APPICON_ASSETS = NO;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = F858BJS7R5;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_KEY_CFBundleDisplayName = SwiftClasses;
+				INFOPLIST_KEY_LSApplicationCategoryType = "";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				IPHONEOS_DEPLOYMENT_TARGET = 26.0;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
 				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = khanh.GKmyClasses;
+				PRODUCT_BUNDLE_IDENTIFIER = SwiftClasses;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				STRING_CATALOG_GENERATE_SYMBOLS = YES;
 				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
@@ -323,7 +348,7 @@
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
-		E244E7A72E943613009F08FE /* Build configuration list for PBXProject "GKmyClasses" */ = {
+		E244E7A72E943613009F08FE /* Build configuration list for PBXProject "SwiftClasses" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				E244E7B52E943614009F08FE /* Debug */,
@@ -332,7 +357,7 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
-		E244E7B72E943614009F08FE /* Build configuration list for PBXNativeTarget "GKmyClasses" */ = {
+		E244E7B72E943614009F08FE /* Build configuration list for PBXNativeTarget "SwiftClasses" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				E244E7B82E943614009F08FE /* Debug */,

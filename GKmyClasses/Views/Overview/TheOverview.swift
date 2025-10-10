@@ -14,16 +14,7 @@ struct TheOverview: View {
 	 var body: some View {
 			NavigationStack {
 				 VStack(spacing: 0) {
-
-						TabView(selection: $selectedTab) {
-							 OverviewPage()
-									.tag(0)
-
-							 StatisticView()
-									.tag(1)
-					}
-						.tabViewStyle(.page(indexDisplayMode: .never))
-						.animation(.easeInOut, value: selectedTab)
+						OverviewPage()
 
 				 }
 				 .onAppear {
@@ -31,28 +22,14 @@ struct TheOverview: View {
 				 }
 				 .navigationTitle(selectedTab == 0 ? "Overview" : "Statistics")
 				 .toolbar {
-						ToolbarItem(placement: .topBarLeading) {
+						ToolbarItem(placement: .topBarTrailing) {
 							 if let fileURL = exportAttendanceCSV(context: modelContext) {
 									ShareLink(item: fileURL)
 							 } else {
 									Text("Export Failed")
 							 }
 						}
-						ToolbarItem(placement: .topBarTrailing) {
-							 HStack(spacing: 20) {
-									Button {
-										 selectedTab = 0
-									} label: {
-										 Image(systemName: "apple.intelligence")
-									}
 
-									Button {
-										 selectedTab = 1
-									} label: {
-										 Image(systemName: "chart.bar")
-									}
-							 }
-						}
 				 }
 			}
 	 }
@@ -188,3 +165,28 @@ struct TheOverview: View {
 #Preview {
 	 TheOverview()
 }
+
+
+	 //						ToolbarItem(placement: .topBarTrailing) {
+	 //							 HStack(spacing: 20) {
+	 //									Button {
+	 //										 selectedTab = 0
+	 //									} label: {
+	 //										 Image(systemName: "apple.intelligence")
+	 //									}
+	 //
+	 //									Button {
+	 //										 selectedTab = 1
+	 //									} label: {
+	 //										 Image(systemName: "chart.bar")
+	 //									}
+	 //							 }
+	 //						}
+//TabView(selection: $selectedTab) {
+//	 .tag(0)
+//
+//	 StatisticView()
+//			.tag(1)
+//}
+//.tabViewStyle(.page(indexDisplayMode: .never))
+//.animation(.easeInOut, value: selectedTab)

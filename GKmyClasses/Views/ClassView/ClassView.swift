@@ -5,7 +5,8 @@ struct ClassView: View {
 	 @Environment(\.modelContext) var modelContext
 	 @State private var path: [ClassModel] = []
 	 @Query var classes: [ClassModel]
-
+	 @AppStorage("isFirstTime") private var isFirstTime: Bool = true
+	 
 	 var body: some View {
 			NavigationStack(path: $path) {   
 				 List {
@@ -45,9 +46,11 @@ struct ClassView: View {
 				 .navigationDestination(for: ClassModel.self) { classModel in
 						DetailClassView(classModel: classModel)
 							 .toolbar(.hidden, for: .tabBar)
-
-
 				 }
+				 .sheet(isPresented: $isFirstTime, content: {
+						IntroScreen()
+							 .interactiveDismissDisabled()
+				 })
 			}
 	 }
 	 private func deleteClass(at offsets: IndexSet) {
