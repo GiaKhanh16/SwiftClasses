@@ -7,12 +7,25 @@
 
 import SwiftUI
 import SwiftData
+import StoreKit
 @main
 struct GKmyClassesApp: App {
     var body: some Scene {
         WindowGroup {
-            TabScreen()
+					 TabScreen()
         }
 				.modelContainer(for: [ClassModel.self, StudentModel.self])
+
     }
+}
+
+
+
+
+
+
+	 //Try It Free
+	 // MARK: - Preview
+#Preview {
+	 ClassView()
 }

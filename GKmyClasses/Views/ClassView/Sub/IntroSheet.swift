@@ -20,10 +20,9 @@ struct IntroScreen: View {
 	 var body: some View {
 			VStack(spacing: 15) {
 
-						// Title + Subtitle
 				 VStack(alignment: .leading) {
 						Text("SwiftClasses")
-							 .font(.system(size: 35, weight: .semibold, design: .default))
+							 .font(.system(size: 30, weight: .semibold, design: .default))
 							 .foregroundStyle(.primary)
 							 .padding(.top, 35 )
 							 .blurSlide(animateTitle)
@@ -52,34 +51,8 @@ struct IntroScreen: View {
 
 				 Spacer(minLength: 10)
 
-						// Footer
-				 VStack(alignment: .leading, spacing: 15) {
-//						VStack(alignment: .leading, spacing: 10) {
-//							 Image(systemName: "person.3.fill")
-//									.foregroundStyle(.gray.mix(with: .blue, by: 0.5))
-//
-//							 Text("Your gameplay information, including what you play and your game activity, is used to improve Game Center.")
-//									.font(.caption2)
-//									.foregroundStyle(.gray)
-//						}
-//						.frame(maxWidth: .infinity, alignment: .leading)
-
-						Button(action: {
-							 isFirstTime = false
-						}, label: {
-							 Text("Got it!")
-									.fontWeight(.bold)
-									.foregroundColor(.primary)
-									.frame(maxWidth: .infinity)
-									.padding(.vertical, 14)
-									.background(.thickMaterial, in: .rect(cornerRadius: 12))
-									.contentShape(.rect)
-
-						})
-				 }
-				 .padding(15)
-				 .blurSlide(animateFooter)
 			}
+		
 			.task {
 				 await runAnimations()
 			}
@@ -156,3 +129,22 @@ extension View {
 	 IntroScreen()
 			.preferredColorScheme(.dark)
 }
+
+
+
+	 //				 VStack(alignment: .leading, spacing: 15) {
+	 //						Button(action: {
+	 //							 isFirstTime = false
+	 //						}, label: {
+	 //							 Text("Got it!")
+	 //									.fontWeight(.bold)
+	 //									.foregroundColor(.primary)
+	 //									.frame(maxWidth: .infinity)
+	 //									.padding(.vertical, 14)
+	 //									.background(.thickMaterial, in: .rect(cornerRadius: 12))
+	 //									.contentShape(.rect)
+	 //
+	 //						})
+	 //				 }
+	 //				 .padding(15)
+	 //				 .blurSlide(animateFooter)

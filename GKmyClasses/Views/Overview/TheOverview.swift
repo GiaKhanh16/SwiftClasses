@@ -3,24 +3,27 @@ import SwiftData
 import FoundationModels
 
 struct TheOverview: View {
+	 
 	 @Environment(\.modelContext) private var modelContext
-	 @State var userPrompt: String = ""
-	 @State private var attendanceText: String = ""
-	 @State private var aiAnswer: String = ""
-	 @State private var isLoading: Bool = false
-	 @State private var isRotating = false
-	 @State private var selectedTab: Int = 0
-
 	 var body: some View {
 			NavigationStack {
-				 VStack(spacing: 0) {
-						OverviewPage()
-
+				 VStack {
+						if #available(iOS 26.0, *) {
+							 AppleIntelView()
+						} else {
+							 VStack(spacing: 20) {
+									Image(systemName: "exclamationmark.triangle.fill")
+										 .font(.largeTitle)
+										 .foregroundStyle(.yellow)
+									Text("This feature is available on iOS 26 or later.")
+										 .font(.headline)
+										 .multilineTextAlignment(.center)
+										 .padding()
+							 }
+							 .padding()
+						}
 				 }
-				 .onAppear {
-						attendanceText = exportAttendanceData(context: modelContext)
-				 }
-				 .navigationTitle(selectedTab == 0 ? "Overview" : "Statistics")
+				 .navigationTitle("Overview")
 				 .toolbar {
 						ToolbarItem(placement: .topBarTrailing) {
 							 if let fileURL = exportAttendanceCSV(context: modelContext) {
@@ -33,16 +36,89 @@ struct TheOverview: View {
 				 }
 			}
 	 }
+	 func exportAttendanceCSV(context: ModelContext) -> URL? {
+			let fetchDescriptor = FetchDescriptor<AttendanceModel>()
+			let attendances = (try? context.fetch(fetchDescriptor)) ?? []
+
+				 // CSV header
+			var csvText = "Date,Student Names\n"
+
+			let formatter = DateFormatter()
+			formatter.dateStyle = .short
+			formatter.timeStyle = .none
+
+			for attendance in attendances {
+				 let dateString = formatter.string(from: attendance.date)
+				 let studentNames = attendance.students.map { $0.name }.joined(separator: "; ")
+						// Wrap in quotes to handle commas inside names
+				 csvText += "\"\(dateString)\",\"\(studentNames)\"\n"
+			}
+
+				 // Save to temporary file
+			let fileName = "AttendanceExport.csv"
+			let tempDir = FileManager.default.temporaryDirectory
+			let fileURL = tempDir.appendingPathComponent(fileName)
+
+			do {
+				 try csvText.write(to: fileURL, atomically: true, encoding: .utf8)
+				 return fileURL
+			} catch {
+				 print("Failed to create CSV file: \(error)")
+				 return nil
+			}
+	 }
+}
+
+@available(iOS 26.0, *)
+struct AppleIntelView: View {
+	 @Environment(\.modelContext) private var modelContext
+	 @State var userPrompt: String = ""
+	 @State private var attendanceText: String = ""
+	 @State private var aiAnswer: String = ""
+	 @State private var isLoading: Bool = false
+	 @State private var isRotating = false
+	 @State private var selectedTab: Int = 0
+	 private var model = SystemLanguageModel.default
+
+	 var body: some View {
+			NavigationStack {
+				 VStack(spacing: 0) {
+						switch model.availability {
+							 case .available:
+									OverviewPage()
+										 .onAppear {
+												attendanceText = exportAttendanceData(context: modelContext)
+										 }
+
+							 case .unavailable(.deviceNotEligible):
+									UnavailableView(message: "Your device is not eligible for Apple Intelligence.")
+
+							 case .unavailable(.appleIntelligenceNotEnabled):
+									UnavailableView(message: "Please enable Apple Intelligence in Settings to use this feature.")
+
+							 case .unavailable(.modelNotReady):
+									UnavailableView(message: "The AI model is not ready yet. It may be downloading or initializing.")
+
+							 case .unavailable(let other):
+									UnavailableView(message: "AI unavailable: \(other)")
+						}
+				 }
+				 .onAppear {
+						attendanceText = exportAttendanceData(context: modelContext)
+				 }
+			}
+	 }
 
 			// MARK: - Overview Tab
 	 @ViewBuilder
 	 func OverviewPage() -> some View {
 			VStack {
 				 HStack(spacing: 20) {
-						TextField("Ask a question...", text: $userPrompt)
-							 .padding(.vertical, 5)
-							 .padding(.leading, 15)
-							 .glassEffect()
+							 TextField("Ask a question...", text: $userPrompt)
+									.padding(.vertical, 5)
+									.padding(.leading, 15)
+									.glassEffect()
+
 						if isLoading {
 							 Image(systemName: "apple.intelligence")
 									.font(.title2)
@@ -77,7 +153,19 @@ struct TheOverview: View {
 			}.padding(.top, 20)
 	 }
 
-			// MARK: - Helpers
+	 @ViewBuilder
+	 func UnavailableView(message: String) -> some View {
+			VStack(spacing: 20) {
+				 Image(systemName: "exclamationmark.triangle.fill")
+						.font(.largeTitle)
+						.foregroundStyle(.yellow)
+				 Text(message)
+						.font(.headline)
+						.multilineTextAlignment(.center)
+						.padding()
+			}
+			.padding()
+	 }
 
 	 func exportAttendanceData(context: ModelContext) -> String {
 			let fetchDescriptor = FetchDescriptor<AttendanceModel>()
@@ -96,37 +184,7 @@ struct TheOverview: View {
 			return summary
 	 }
 
-	 func exportAttendanceCSV(context: ModelContext) -> URL? {
-			let fetchDescriptor = FetchDescriptor<AttendanceModel>()
-			let attendances = (try? context.fetch(fetchDescriptor)) ?? []
 
-				 // CSV header
-			var csvText = "Date,Student Names\n"
-
-			let formatter = DateFormatter()
-			formatter.dateStyle = .short
-			formatter.timeStyle = .none
-
-			for attendance in attendances {
-				 let dateString = formatter.string(from: attendance.date)
-				 let studentNames = attendance.students.map { $0.name }.joined(separator: "; ")
-						// Wrap in quotes to handle commas inside names
-				 csvText += "\"\(dateString)\",\"\(studentNames)\"\n"
-			}
-
-				 // Save to temporary file
-			let fileName = "AttendanceExport.csv"
-			let tempDir = FileManager.default.temporaryDirectory
-			let fileURL = tempDir.appendingPathComponent(fileName)
-
-			do {
-				 try csvText.write(to: fileURL, atomically: true, encoding: .utf8)
-				 return fileURL
-			} catch {
-				 print("Failed to create CSV file: \(error)")
-				 return nil
-			}
-	 }
 
 	 func generateAnswer() {
 			isLoading = true
@@ -163,7 +221,10 @@ struct TheOverview: View {
 }
 
 #Preview {
-	 TheOverview()
+	 if #available(iOS 26.0, *) {
+			TheOverview()
+	 } else {
+	 }
 }
 
 

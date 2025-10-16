@@ -9,7 +9,7 @@
       }
     ]
   },
-  "identifier" : "26BD84C2",
+  "identifier" : "4FA1824A",
   "nonRenewingSubscriptions" : [
 
   ],
@@ -17,16 +17,13 @@
 
   ],
   "settings" : {
-    "_applicationInternalID" : "6753855564",
     "_askToBuyEnabled" : false,
-    "_billingGracePeriodEnabled" : true,
-    "_billingIssuesEnabled" : true,
-    "_developerTeamID" : "F858BJS7R5",
+    "_billingGracePeriodEnabled" : false,
+    "_billingIssuesEnabled" : false,
     "_disableDialogs" : false,
     "_failTransactionsEnabled" : false,
-    "_lastSynchronizedDate" : 781808278.93621802,
     "_locale" : "en_US",
-    "_renewalBillingIssuesEnabled" : true,
+    "_renewalBillingIssuesEnabled" : false,
     "_storefront" : "USA",
     "_storeKitErrors" : [
 
@@ -35,11 +32,11 @@
   },
   "subscriptionGroups" : [
     {
-      "id" : "21802700",
+      "id" : "CFE9E6D4",
       "localizations" : [
 
       ],
-      "name" : "MonthlySubscription",
+      "name" : "Free Trial",
       "subscriptions" : [
         {
           "adHocOffers" : [
@@ -51,24 +48,23 @@
           "displayPrice" : "4.99",
           "familyShareable" : false,
           "groupNumber" : 1,
-          "internalID" : "6753855975",
+          "internalID" : "50D9AAD6",
           "introductoryOffer" : {
-            "internalID" : "F8D5E88C",
-            "numberOfPeriods" : 1,
+            "internalID" : "D78748E0",
             "paymentMode" : "free",
             "subscriptionPeriod" : "P1W"
           },
           "localizations" : [
             {
-              "description" : "A monthly subscription to use all services from the app",
-              "displayName" : "Monthly Subscription",
+              "description" : "",
+              "displayName" : "",
               "locale" : "en_US"
             }
           ],
-          "productID" : "MonthlySubscription",
+          "productID" : "Khanh7id",
           "recurringSubscriptionPeriod" : "P1M",
-          "referenceName" : "MonthlySubscription",
-          "subscriptionGroupID" : "21802700",
+          "referenceName" : "Free Trial",
+          "subscriptionGroupID" : "CFE9E6D4",
           "type" : "RecurringSubscription",
           "winbackOffers" : [
 
