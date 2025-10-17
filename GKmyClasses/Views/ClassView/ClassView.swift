@@ -6,7 +6,7 @@ struct ClassView: View {
 	 @Environment(\.modelContext) var modelContext
 	 @State private var path: [ClassModel] = []
 	 @Query var classes: [ClassModel]
-	 @State private var isSubscribed: Bool = true
+	 @State private var notSubcribed: Bool = true
 
 
 	 var body: some View {
@@ -49,13 +49,10 @@ struct ClassView: View {
 						DetailClassView(classModel: classModel)
 							 .toolbar(.hidden, for: .tabBar)
 				 }
-				 .sheet(isPresented: $isSubscribed) {
-						Paywall()
-							 .interactiveDismissDisabled()
-				 }
+
 				 .onInAppPurchaseCompletion { product, result in
 						if case .success = result {
-							 isSubscribed.toggle()
+							  notSubcribed.toggle()
 						}
 				 }
 			}
@@ -84,3 +81,4 @@ struct Paywall: View {
 	 TabScreen()
 			.modelContainer(for: [ClassModel.self, StudentModel.self], inMemory: true)
 }
+

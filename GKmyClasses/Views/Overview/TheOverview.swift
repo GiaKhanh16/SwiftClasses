@@ -25,22 +25,15 @@ struct TheOverview: View {
 				 }
 				 .navigationTitle("Overview")
 				 .toolbar {
-						ToolbarItem(placement: .topBarTrailing) {
-							 if let fileURL = exportAttendanceCSV(context: modelContext) {
-									ShareLink(item: fileURL)
-							 } else {
-									Text("Export Failed")
-							 }
-						}
 
 				 }
 			}
 	 }
+	 
 	 func exportAttendanceCSV(context: ModelContext) -> URL? {
 			let fetchDescriptor = FetchDescriptor<AttendanceModel>()
 			let attendances = (try? context.fetch(fetchDescriptor)) ?? []
 
-				 // CSV header
 			var csvText = "Date,Student Names\n"
 
 			let formatter = DateFormatter()
@@ -50,11 +43,9 @@ struct TheOverview: View {
 			for attendance in attendances {
 				 let dateString = formatter.string(from: attendance.date)
 				 let studentNames = attendance.students.map { $0.name }.joined(separator: "; ")
-						// Wrap in quotes to handle commas inside names
 				 csvText += "\"\(dateString)\",\"\(studentNames)\"\n"
 			}
 
-				 // Save to temporary file
 			let fileName = "AttendanceExport.csv"
 			let tempDir = FileManager.default.temporaryDirectory
 			let fileURL = tempDir.appendingPathComponent(fileName)
@@ -114,7 +105,7 @@ struct AppleIntelView: View {
 	 func OverviewPage() -> some View {
 			VStack {
 				 HStack(spacing: 20) {
-							 TextField("Ask a question...", text: $userPrompt)
+							 TextField("Question on your attendances", text: $userPrompt)
 									.padding(.vertical, 5)
 									.padding(.leading, 15)
 									.glassEffect()
@@ -228,26 +219,3 @@ struct AppleIntelView: View {
 }
 
 
-	 //						ToolbarItem(placement: .topBarTrailing) {
-	 //							 HStack(spacing: 20) {
-	 //									Button {
-	 //										 selectedTab = 0
-	 //									} label: {
-	 //										 Image(systemName: "apple.intelligence")
-	 //									}
-	 //
-	 //									Button {
-	 //										 selectedTab = 1
-	 //									} label: {
-	 //										 Image(systemName: "chart.bar")
-	 //									}
-	 //							 }
-	 //						}
-//TabView(selection: $selectedTab) {
-//	 .tag(0)
-//
-//	 StatisticView()
-//			.tag(1)
-//}
-//.tabViewStyle(.page(indexDisplayMode: .never))
-//.animation(.easeInOut, value: selectedTab)

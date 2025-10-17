@@ -1,9 +1,3 @@
-//
-//  ClassDetail.swift
-//  SwiftClasses
-//
-//  Created by Khanh Nguyen on 10/15/25.
-//
 
 
 import SwiftUI
@@ -22,8 +16,13 @@ struct DetailClassView: View {
 	 @State private var selectDate = Date()
 	 @State private var selectedStudents: [StudentModel] = []
 	 @State private var staffString: String = ""
-	 @State var allAttendance: Bool = false
+	 @State private var allAttendance: Bool = false
 	 @State private var saveWorkItem: DispatchWorkItem?
+	 @State private var shareMenu: Bool = false
+
+	 @State private var startDate: Date = Date()
+	 @State private var endDate: Date = Date()
+
 
 	 private func attendanceIndex(for date: Date) -> Int {
 			if let index = classModel.attendances.firstIndex(where: { Calendar.current.isDate($0.date, inSameDayAs: date) }) {
@@ -178,10 +177,58 @@ struct DetailClassView: View {
 			.navigationTitle("Details")
 			.toolbar {
 
+
+				 Button {
+						shareMenu.toggle()
+				 } label: {
+						Image(systemName: "square.and.arrow.up")
+				 }
+				 .popover(
+						isPresented: $shareMenu,
+						attachmentAnchor: .point(.bottomTrailing),
+						content: {
+							 VStack(alignment: .leading){
+
+									DatePicker(
+										 "From",
+										 selection: $startDate,
+										 displayedComponents: .date
+									)
+
+									DatePicker(
+										 "To",
+										 selection: $endDate,
+										 displayedComponents: .date
+									)
+
+									if let exportURL = exportAttendanceCSV(
+										 context: modelContext,
+										 startDate: startDate,
+										 endDate: endDate
+									) {
+										 withAnimation {
+												ShareLink(
+													 item: exportURL
+												) {
+													 Label("Export", systemImage: "square.and.arrow.up")
+												}
+										 }
+									} else {
+										 Text("No attendance data available in this range.")
+												.foregroundStyle(.secondary)
+									}
+
+
+							 }
+							 .padding(20)
+							 .presentationCompactAdaptation(.popover)
+						})
+
+
 				 Button {
 						allAttendance.toggle()
 				 } label: {
-						Image(systemName: "testtube.2")
+						Image(systemName: "line.3.horizontal.decrease")
 				 }
 
 				 Button {
@@ -230,4 +277,70 @@ struct DetailClassView: View {
 			}
 	 }
 
+	 @MainActor
+	 func exportAttendanceCSV(context: ModelContext, startDate: Date, endDate: Date) -> URL? {
+			let fetchDescriptor = FetchDescriptor<AttendanceModel>()
+			let attendances = (try? context.fetch(fetchDescriptor)) ?? []
+
+				 // Filter by range
+			let calendar = Calendar.current
+			let filtered = attendances.filter { attendance in
+				 (attendance.date >= calendar.startOfDay(for: startDate)) &&
+				 (attendance.date < calendar.date(byAdding: .day, value: 1, to: endDate)!)
+			}
+
+
+			guard !filtered.isEmpty else {
+				 print("No attendance records found in the selected range.")
+				 return nil
+			}
+
+			var csvText = "Class Name,Class Description,Date,Staff,Student Names\n"
+			let formatter = DateFormatter()
+			formatter.dateStyle = .short
+			formatter.timeStyle = .none
+
+			let representativeClassName = filtered.first?.classModel?.name ?? "Class"
+
+			for attendance in filtered {
+				 let className = attendance.classModel?.name ?? "Unknown Class"
+				 let classDesc = attendance.classModel?.classDescription ?? ""
+				 let date = formatter.string(from: attendance.date)
+				 let staff = attendance.staff
+				 let students = attendance.students.map { $0.name }.joined(separator: "; ")
+
+				 csvText += "\"\(className)\",\"\(classDesc)\",\"\(date)\",\"\(staff)\",\"\(students)\"\n"
+			}
+
+			let summary = "\nExported range: \(formatter.string(from: startDate)) - \(formatter.string(from: endDate))\n"
+			csvText += summary
+
+			let safeClassName = representativeClassName
+				 .replacingOccurrences(of: " ", with: "")
+				 .replacingOccurrences(of: "/", with: "-")
+				 .replacingOccurrences(of: ":", with: "-")
+
+			let monthFormatter = DateFormatter()
+			monthFormatter.dateFormat = "MMM"
+			let monthString = monthFormatter.string(from: startDate)
+
+			let fileName = "\(safeClassName)-\(monthString).csv"
+			let tempDir = FileManager.default.temporaryDirectory
+			let fileURL = tempDir.appendingPathComponent(fileName)
+
+			do {
+				 try csvText.write(to: fileURL, atomically: true, encoding: .utf8)
+				 print("✅ CSV exported to: \(fileURL.path)")
+				 return fileURL
+			} catch {
+				 print("❌ Failed to write CSV: \(error)")
+				 return nil
+			}
+	 }
+
+
+}
+
+#Preview {
+	 TabScreen()
 }
