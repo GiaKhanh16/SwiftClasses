@@ -3,16 +3,19 @@ import SwiftData
 import StoreKit
 
 struct ClassView: View {
+	 @Environment(SubscriptionStatus.self) var subStatus: SubscriptionStatus
 	 @Environment(\.modelContext) var modelContext
 	 @State private var path: [ClassModel] = []
 	 @Query var classes: [ClassModel]
-	 @State private var notSubcribed: Bool = true
-
+	 var sortedClasses: [ClassModel] {
+			classes.reversed()
+	 }
 
 	 var body: some View {
+			@Bindable var subStatus = subStatus
 			NavigationStack(path: $path) {
 				 List {
-						ForEach(classes) { item in
+						ForEach(sortedClasses) { item in
 							 NavigationLink(value: item) {
 									VStack(alignment: .leading, spacing: 9) {
 										 Text(item.name)
@@ -49,13 +52,12 @@ struct ClassView: View {
 						DetailClassView(classModel: classModel)
 							 .toolbar(.hidden, for: .tabBar)
 				 }
-
-				 .onInAppPurchaseCompletion { product, result in
-						if case .success = result {
-							  notSubcribed.toggle()
-						}
+				 .sheet(isPresented: $subStatus.notSubscribed) {
+						Paywall()
+							 .interactiveDismissDisabled()
 				 }
 			}
+
 	 }
 
 	 private func deleteClass(at offsets: IndexSet) {
@@ -68,12 +70,13 @@ struct ClassView: View {
 }
 
 struct Paywall: View {
-	 static let subscriptionGroupID = "21805784"
+	 static let subscriptionGroupID = "96E04A5E"
 
 	 var body: some View {
 			SubscriptionStoreView(groupID: Self.subscriptionGroupID) {
 				 IntroScreen()
 			}
+			.storeButton(.hidden, for: .cancellation)
 	 }
 }
 

@@ -7,7 +7,7 @@ struct TheOverview: View {
 	 @Environment(\.modelContext) private var modelContext
 	 var body: some View {
 			NavigationStack {
-				 VStack {
+				 Group {
 						if #available(iOS 26.0, *) {
 							 AppleIntelView()
 						} else {
@@ -24,9 +24,7 @@ struct TheOverview: View {
 						}
 				 }
 				 .navigationTitle("Overview")
-				 .toolbar {
 
-				 }
 			}
 	 }
 	 

@@ -1,9 +1,3 @@
-	 //
-	 //  StudentView.swift
-	 //  GKAttendance
-	 //
-	 //  Created by Khanh Nguyen on 10/4/25.
-	 //
 import SwiftUI
 import SwiftData
 

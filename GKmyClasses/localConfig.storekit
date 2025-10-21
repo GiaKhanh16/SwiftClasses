@@ -9,7 +9,7 @@
       }
     ]
   },
-  "identifier" : "F791195C",
+  "identifier" : "8C9CF7E3",
   "nonRenewingSubscriptions" : [
 
   ],
@@ -17,16 +17,13 @@
 
   ],
   "settings" : {
-    "_applicationInternalID" : "6753855564",
-    "_askToBuyEnabled" : true,
-    "_billingGracePeriodEnabled" : true,
-    "_billingIssuesEnabled" : true,
-    "_developerTeamID" : "F858BJS7R5",
+    "_askToBuyEnabled" : false,
+    "_billingGracePeriodEnabled" : false,
+    "_billingIssuesEnabled" : false,
     "_disableDialogs" : false,
     "_failTransactionsEnabled" : false,
-    "_lastSynchronizedDate" : 782085680.41711295,
     "_locale" : "en_US",
-    "_renewalBillingIssuesEnabled" : true,
+    "_renewalBillingIssuesEnabled" : false,
     "_storefront" : "USA",
     "_storeKitErrors" : [
 
@@ -35,11 +32,11 @@
   },
   "subscriptionGroups" : [
     {
-      "id" : "21805784",
+      "id" : "96E04A5E",
       "localizations" : [
 
       ],
-      "name" : "Try It Free",
+      "name" : "Monthly Sub",
       "subscriptions" : [
         {
           "adHocOffers" : [
@@ -51,24 +48,19 @@
           "displayPrice" : "4.99",
           "familyShareable" : false,
           "groupNumber" : 1,
-          "internalID" : "6753960238",
-          "introductoryOffer" : {
-            "internalID" : "89C9AFE3",
-            "numberOfPeriods" : 1,
-            "paymentMode" : "free",
-            "subscriptionPeriod" : "P1W"
-          },
+          "internalID" : "855C2484",
+          "introductoryOffer" : null,
           "localizations" : [
             {
-              "description" : "Test",
-              "displayName" : "Test",
+              "description" : "Monthly $4.99 Full Access",
+              "displayName" : "Full Access ",
               "locale" : "en_US"
             }
           ],
-          "productID" : "FreeTrial7",
+          "productID" : "monthly4.99",
           "recurringSubscriptionPeriod" : "P1M",
-          "referenceName" : "Try It Free",
-          "subscriptionGroupID" : "21805784",
+          "referenceName" : "Monthly Subcription",
+          "subscriptionGroupID" : "96E04A5E",
           "type" : "RecurringSubscription",
           "winbackOffers" : [
 
