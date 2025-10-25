@@ -13,7 +13,7 @@ struct AllAttendancesView: View {
 							 ForEach(item.students) { student in
 									Text(student.name)
 							 }
-							 Text(item.staff)
+//							 Text(item.staff)
 						}
 				 }
 			}

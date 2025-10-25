@@ -6,15 +6,15 @@ import SwiftData
 struct TabScreen: View {
 	 var body: some View {
 			TabView {
-				 Tab("Attendance", systemImage: "calendar") {
+				 Tab("Attendance", systemImage: "list.bullet.clipboard") {
 						ClassView()
 				 }
 
-				 Tab("Students", systemImage: "person.2") {
+				 Tab("Attendees", systemImage: "figure.run") {
 						StudentView()
 				 }
-				 Tab("Overview", systemImage: "apple.intelligence") {
-						TheOverview()
+				 Tab("Staff", systemImage: "person.3.fill") {
+						StaffView()
 				 }
 			}
 	 }

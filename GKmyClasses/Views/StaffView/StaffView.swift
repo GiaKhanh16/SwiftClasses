@@ -1,92 +1,97 @@
 import SwiftUI
 import SwiftData
 
-struct StudentView: View {
+struct StaffView: View {
 	 @State private var searchable: String = ""
-	 @State private var addStudentBool: Bool = false
-	 @Query var students: [StudentModel]
+	 @State private var addStaffBool: Bool = false
+	 @Query var staffs: [StaffModel]
 	 var body: some View {
 			NavigationStack {
-				 List(filteredStudent) { student in
-						NavigationLink(value: student) {
+				 List(filteredStaff) { staff in
+						NavigationLink(value: staff) {
 							 VStack(alignment: .leading, spacing: 8) {
-									Text(student.name)
-
-									Text(String(student.age))
-										 .font(.footnote)
+									Text(staff.name)
+									Text(staff.note)
 										 .foregroundStyle(.secondary)
+										 .font(.footnote)
 							 }
 						}
 				 }
-				 .navigationTitle("Attendees")
+				 .navigationTitle("Staffs")
 				 .toolbar {
 						Button {
 							 withAnimation {
-									addStudentBool.toggle()
+									addStaffBool.toggle()
 							 }
 						} label: {
 							 Image(systemName: "plus")
 						}
 				 }
-				 .navigationDestination(for: StudentModel.self) { student in
-						StudentDetailView(student: student)
+				 .navigationDestination(for: StaffModel.self) { staff in
+						StaffDetailView(staff: staff)
 							 .toolbar(.hidden, for: .tabBar)
 				 }
 				 .searchable(text: $searchable)
-				 .sheet(isPresented: $addStudentBool) {
-						AddStudentView()
+				 .sheet(isPresented: $addStaffBool) {
+						AddStaffView()
 
 				 }
 			}
 	 }
-	 var filteredStudent: [StudentModel] {
+	 var filteredStaff: [StaffModel] {
 			if searchable.isEmpty {
-				 return students
+				 return staffs
 			} else {
-				 return students.filter {
+				 return staffs.filter { 
 						$0.name.localizedCaseInsensitiveContains(searchable)
 				 }
 			}
 	 }
+
 }
 
-struct StudentDetailView: View {
+struct StaffDetailView: View {
 	 @Environment(\.dismiss) var dismiss
 	 @Environment(\.modelContext) var modelContext
-	 @Bindable var student: StudentModel
+	 @Bindable var staff: StaffModel
 
 	 @State private var confirmationShown: Bool = false
 	 var body: some View {
 			VStack {
 				 Form {
 						Section("Name") {
-							 TextField("John Doe", text: $student.name)
+							 TextField("John Doe", text: $staff.name)
 						}
-						Section("Age") {
-							 TextField("Age", value: $student.age, formatter: NumberFormatter())
-									.keyboardType(.numberPad)
+						Section("Note") {
+							 TextField("Yoga Teacher", text: $staff.note)
 						}
-						Section("Level") {
-							 TextField("Intermediate", text: $student.level)
-						}
-						Section("Attendance History") {
-							 if student.attendances.isEmpty {
+
+						Section("History") {
+							 if staff.staffAttendances.isEmpty {
 									Text("No attendance records yet.")
 										 .foregroundStyle(.secondary)
 							 } else {
-									ForEach(student.attendances.sorted(by: { $0.date > $1.date })) { attendance in
+									ForEach(
+										 staff.staffAttendances.sorted(by: { $0.attendance.date > $1.attendance.date })
+									) { staffAttendance in
+										 let attendance = staffAttendance.attendance
 										 if let classModel = attendance.classModel {
-												VStack(alignment: .leading, spacing: 4) {
-													 Text(classModel.name)
-															.font(.headline)
-													 Text(attendance.date, style: .date)
-															.font(.subheadline)
-															.foregroundStyle(.secondary)
+												HStack {
+													 VStack(alignment: .leading, spacing: 4) {
+															Text(classModel.name)
+																 .font(.headline)
+															Text(attendance.date, style: .date)
+																 .font(.subheadline)
+																 .foregroundStyle(.secondary)
+													 }
+													 Spacer()
+													 StaffDurationPicker(staffAttendance: staffAttendance)
 												}
 										 }
 									}
 							 }
 						}
+
 				 }
 				 .listSectionSpacing(.custom(0))
 				 .navigationTitle("Details")
@@ -103,7 +108,7 @@ struct StudentDetailView: View {
 							 titleVisibility: .visible
 						) {
 							 Button("Yes") {
-									deleteStudent(student)
+									deleteStudent(staff)
 									dismiss()
 							 }
 							 Button("No") { confirmationShown.toggle() }
@@ -114,9 +119,9 @@ struct StudentDetailView: View {
 			}
 	 }
 
-	 private func deleteStudent(_ student: StudentModel) {
+	 private func deleteStudent(_ staff: StaffModel) {
 			do {
-				 modelContext.delete(student)
+				 modelContext.delete(staff)
 				 try modelContext.save()
 				 dismiss()
 			} catch {
@@ -125,47 +130,43 @@ struct StudentDetailView: View {
 	 }
 }
 
-struct AddStudentView: View {
+struct AddStaffView: View {
 	 @Environment(\.dismiss) var dismiss
 	 @Environment(\.modelContext) var modelContext
 
 	 @State private var name: String = ""
-	 @State private var age: String = ""
-	 @State private var level: String = ""
+	 @State private var note: String = ""
 
 
 	 var body: some View {
 			NavigationStack {
 				 Form {
 						Section("Name") {
-							 TextField("John Doe", text: $name)
+							 TextField("Novak Djokovic", text: $name)
 						}
-						Section("Age") {
-							 TextField("15", text: $age)
-									.keyboardType(.numberPad)
+						Section("Note") {
+							 TextField("Role...", text: $note)
 						}
-						Section("Level") {
-							 TextField("Intermediate", text: $level)
-						}
-						
+
 				 }
-				 .navigationTitle("Add")
+				 .navigationTitle("Add Staff")
 				 .toolbar {
 						ToolbarItem(placement: .confirmationAction) {
 							 Button("Save") {
-									if let intAge = Int(age) {
-										 let student = StudentModel(
-
-												name: name,
-												age: intAge,
-												level: level
-										 )
-										 modelContext.insert(student)
-
+									let newStaff = StaffModel(
+										 name: name,
+										 note: note
+									)
+									modelContext.insert(newStaff)
+									do {
+										 try modelContext.save()
+									} catch {
+										 print(error)
 									}
 									dismiss()
 							 }
 						}
+
 						ToolbarItem(placement: .cancellationAction) {
 							 Button("Cancel") { dismiss() }
 						}

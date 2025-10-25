@@ -7,7 +7,9 @@ import SwiftData
 struct DetailClassView: View {
 
 	 @Query var students: [StudentModel]
+	 @Query var staffs: [StaffModel]
 	 @Environment(\.modelContext) var modelContext
+	 @Environment(SubscriptionStatus.self) var subModel
 	 @Environment(\.dismiss) var dismiss
 	 @Bindable var classModel: ClassModel
 	 @State private var confirmationShown: Bool = false
@@ -21,7 +23,10 @@ struct DetailClassView: View {
 	 @State private var shareMenu: Bool = false
 
 	 @State private var startDate: Date = Date()
+	 @State private var paywall: Bool = false
 	 @State private var endDate: Date = Date()
+	 @State private var staffHours: [UUID: Int] = [:]
+	 @State private var staffMinutes: [UUID: Int] = [:]
 
 
 	 private func attendanceIndex(for date: Date) -> Int {
@@ -30,7 +35,7 @@ struct DetailClassView: View {
 			} else {
 				 let newAttendance = AttendanceModel(
 						date: date,
-						staff: "", students: []
+				    students: []
 				 )
 				 classModel.attendances.append(newAttendance)
 				 return classModel.attendances.count - 1
@@ -68,6 +73,38 @@ struct DetailClassView: View {
 			}
 	 }
 
+	 private func toggleStaff(_ staff: StaffModel) {
+			if let existingLinkIndex = filteredAttendance.staffAttendances.firstIndex(
+				 where: { $0.staff.staffID == staff.staffID }
+			) {
+						// Remove existing StaffAttendanceModel link
+				 let existingLink = filteredAttendance.staffAttendances[existingLinkIndex]
+				 filteredAttendance.staffAttendances.remove(at: existingLinkIndex)
+
+						// Also remove it from the staff side
+				 if let staffIndex = staff.staffAttendances.firstIndex(where: { $0.id == existingLink.id }) {
+						staff.staffAttendances.remove(at: staffIndex)
+				 }
+
+				 modelContext.delete(existingLink)
+
+			} else {
+				 let newLink = StaffAttendanceModel(
+						staff: staff,
+						attendance: filteredAttendance
+				 )
+				 filteredAttendance.staffAttendances.append(newLink)
+				 staff.staffAttendances.append(newLink)
+			}
+
+			do {
+				 try modelContext.save()
+			} catch {
+				 print("Failed to toggle staff: \(error)")
+			}
+	 }
+
+
 
 
 	 var body: some View {
@@ -89,20 +126,12 @@ struct DetailClassView: View {
 							 displayedComponents: .date
 						).onChange(of: selectDate) { _, newDate in
 							 let _ = attendanceIndex(for: newDate)
-							 staffString = filteredAttendance.staff
-							 if filteredAttendance.staff.isEmpty {
-									staffString = ""
-							 }
-
 						}
 				 }
 
 				 Section {
-						TextField("Search Students", text: $searchText)
-						ForEach(
-							 studentList,
-							 id: \.studentID
-						) { student in
+						TextField("Search Attendee", text: $searchText)
+						ForEach( studentList, id: \.studentID) { student in
 							 HStack {
 									VStack(alignment: .leading) {
 										 Text(student.name)
@@ -144,27 +173,64 @@ struct DetailClassView: View {
 							 .font(.callout)
 							 .fontWeight(.semibold)
 				 } footer: {
-						Text("Search for student first before you add a new student.")
+						Text("Search first before you add a new one.")
 							 .font(.caption)
 				 }
+
+
+
 				 Section {
-						TextField("Coaches...", text: $staffString)
-							 .onChange(of: staffString) { _, newValue in
-									filteredAttendance.staff = newValue
-
-									saveWorkItem?.cancel()
-
-									let workItem = DispatchWorkItem {
-										 do {
-												try modelContext.save()
-												print("Staff saved ✅")
-										 } catch {
-												print("Failed to save staff: \(error)")
-										 }
+						TextField("Search Staff", text: $staffString)
+						if staffString.isEmpty {
+							 ForEach(filteredAttendance.staffAttendances) { staffAttendance in
+									HStack {
+										 Text(staffAttendance.staff.name)
+												.font(.headline)
+										 Spacer()
+										 StaffDurationPicker(
+												staffAttendance: staffAttendance
+										 )
 									}
-									saveWorkItem = workItem
-									DispatchQueue.main.asyncAfter(deadline: .now() + 0.7, execute: workItem)
+									.padding(.vertical, 4)
 							 }
+
+						} else {
+							 ForEach(staffList, id: \.staffID) { staff in
+
+									HStack(alignment: .center) {
+										 Text(staff.name)
+												.font(.headline)
+										 Spacer()
+										 if let link = filteredAttendance.staffAttendances.first(where: { $0.staff.staffID == staff.staffID }) {
+												StaffDurationPicker(staffAttendance: link)
+										 }
+
+										 Button {
+												withAnimation {
+													 toggleStaff(staff)
+												}
+										 } label: {
+												Image(systemName:
+																 filteredAttendance.staffAttendances.contains(where: { $0.staff.staffID == staff.staffID })
+															? "checkmark.circle.fill"
+															: "circle"
+												)
+												.foregroundColor(
+													 filteredAttendance.staffAttendances.contains(where: { $0.staff.staffID == staff.staffID })
+													 ? .green
+													 : .gray
+												)
+										 }
+										 .offset(y: -1)
+
+									}
+									.padding(.vertical, 4)
+							 }
+
+						}
+
+
+
 
 
 				 } header: {
@@ -176,10 +242,13 @@ struct DetailClassView: View {
 			}
 			.navigationTitle("Details")
 			.toolbar {
-
-
 				 Button {
-						shareMenu.toggle()
+						if subModel.notSubscribed == false {
+							 paywall.toggle()
+						} else {
+							 shareMenu.toggle()
+						}
+
 				 } label: {
 						Image(systemName: "square.and.arrow.up")
 				 }
@@ -224,13 +293,6 @@ struct DetailClassView: View {
 							 .presentationCompactAdaptation(.popover)
 						})
 
-
-				 Button {
-						allAttendance.toggle()
-				 } label: {
-						Image(systemName: "line.3.horizontal.decrease")
-				 }
-
 				 Button {
 						confirmationShown.toggle()
 				 } label: {
@@ -249,10 +311,12 @@ struct DetailClassView: View {
 				 }
 			}
 			.sheet(isPresented: $addStudentBool) {
-				 AddStudentView()
+				 AddStudentView2 { newStudent in
+						toggleStudent(newStudent)
+				 }
 			}
-			.sheet(isPresented: $allAttendance) {
-				 AllAttendancesView(attendance: classModel.attendances)
+			.sheet(isPresented: $paywall) {
+				 Paywall()
 			}
 	 }
 
@@ -274,6 +338,12 @@ struct DetailClassView: View {
 				 return students.filter {
 						$0.name.localizedCaseInsensitiveContains(searchText)
 				 }
+			}
+	 }
+
+	 private var staffList: [StaffModel] {
+				 return staffs.filter {
+						$0.name.localizedCaseInsensitiveContains(staffString)
 			}
 	 }
 
@@ -306,16 +376,16 @@ struct DetailClassView: View {
 				 let className = attendance.classModel?.name ?? "Unknown Class"
 				 let classDesc = attendance.classModel?.classDescription ?? ""
 				 let date = formatter.string(from: attendance.date)
-				 let staff = attendance.staff
+//				 let staff = attendance.staff
 				 let students = attendance.students.map { $0.name }.joined(separator: "; ")
 
-				 csvText += "\"\(className)\",\"\(classDesc)\",\"\(date)\",\"\(staff)\",\"\(students)\"\n"
+				 csvText += "\"\(className)\",\"\(classDesc)\",\"\(date)\",\"\(students)\"\n"
 			}
 
 			let summary = "\nExported range: \(formatter.string(from: startDate)) - \(formatter.string(from: endDate))\n"
 			csvText += summary
 
-			let safeClassName = representativeClassName
+			let _ = representativeClassName
 				 .replacingOccurrences(of: " ", with: "")
 				 .replacingOccurrences(of: "/", with: "-")
 				 .replacingOccurrences(of: ":", with: "-")
@@ -324,7 +394,7 @@ struct DetailClassView: View {
 			monthFormatter.dateFormat = "MMM"
 			let monthString = monthFormatter.string(from: startDate)
 
-			let fileName = "\(safeClassName)-\(monthString).csv"
+			let fileName = "AttendanceExport\(monthString).csv"
 			let tempDir = FileManager.default.temporaryDirectory
 			let fileURL = tempDir.appendingPathComponent(fileName)
 
@@ -337,10 +407,80 @@ struct DetailClassView: View {
 				 return nil
 			}
 	 }
-
-
 }
 
-#Preview {
-	 TabScreen()
+
+
+struct AddStudentView2: View {
+	 @Environment(\.dismiss) var dismiss
+	 @Environment(\.modelContext) var modelContext
+
+	 @State private var name: String = ""
+	 @State private var age: String = ""
+	 @State private var level: String = ""
+	 var onSave: ((StudentModel) -> Void)? = nil
+
+	 var body: some View {
+			NavigationStack {
+				 Form {
+						Section("Name") {
+							 TextField("John Doe", text: $name)
+						}
+						Section("Age") {
+							 TextField("15", text: $age)
+									.keyboardType(.numberPad)
+						}
+						Section("Level") {
+							 TextField("Intermediate", text: $level)
+						}
+
+				 }
+				 .navigationTitle("Add Student")
+				 .toolbar {
+						ToolbarItem(placement: .confirmationAction) {
+							 Button("Save") {
+									if let intAge = Int(age) {
+										 let student = StudentModel(
+
+												name: name,
+												age: intAge,
+												level: level
+										 )
+										 modelContext.insert(student)
+										 onSave?(student)
+									}
+									dismiss()
+							 }
+						}
+						ToolbarItem(placement: .cancellationAction) {
+							 Button("Cancel") { dismiss() }
+						}
+				 }
+			}
+	 }
 }
+
+
+struct DateTest: View {
+	 @State private var duration: Date = {
+			var calendar = Calendar.current
+			let components = DateComponents(hour: 0, minute: 0)
+			return calendar.date(from: components)!
+	 }()
+
+	 var body: some View {
+			VStack {
+				 DatePicker(
+						"",
+						selection: $duration,
+						displayedComponents: .hourAndMinute
+				 )
+				 .labelsHidden()
+				 .datePickerStyle(.compact)
+				 .environment(\.locale, Locale(identifier: "en_GB"))
+				 .scaleEffect(0.8)
+			}
+	 }
+}
+
+

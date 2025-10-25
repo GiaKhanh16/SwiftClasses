@@ -11,6 +11,7 @@ import StoreKit
 @main
 struct GKmyClassesApp: App {
 	 @State private var subStatus = SubscriptionStatus()
+	 let container: ModelContainer
     var body: some Scene {
 			 @Bindable var subStatus = subStatus
         WindowGroup {
@@ -32,18 +33,23 @@ struct GKmyClassesApp: App {
 
 							}
         }
-				.modelContainer(for: [ClassModel.self, StudentModel.self])
+				.modelContainer(container)
 				.environment(subStatus)
     }
+	 init() {
+			let schema = Schema([ClassModel.self, StudentModel.self, StaffModel.self.self])
+			let config = ModelConfiguration("SwiftClasses", schema: schema)
+			do {
+				 container = try ModelContainer(for: schema, configurations: config)
+			} catch {
+				 fatalError("Could not configure the container")
+			}
+
+			print(URL.applicationSupportDirectory.path(percentEncoded: false))
+	 }
 }
 
 
 
 
 
-
-	 //Try It Free
-	 // MARK: - Preview
-#Preview {
-	 ClassView()
-}

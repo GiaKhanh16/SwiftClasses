@@ -3,7 +3,7 @@ import SwiftData
 import FoundationModels
 
 struct TheOverview: View {
-	 
+
 	 @Environment(\.modelContext) private var modelContext
 	 var body: some View {
 			NavigationStack {
@@ -60,13 +60,16 @@ struct TheOverview: View {
 
 @available(iOS 26.0, *)
 struct AppleIntelView: View {
+	 @Environment(SubscriptionStatus.self) var subModel
 	 @Environment(\.modelContext) private var modelContext
 	 @State var userPrompt: String = ""
 	 @State private var attendanceText: String = ""
-	 @State private var aiAnswer: String = ""
+//	 @State private var aiAnswer: String = ""
 	 @State private var isLoading: Bool = false
 	 @State private var isRotating = false
 	 @State private var selectedTab: Int = 0
+	 @State private var wallToggle: Bool = false
+	 @State private var aiAnswer: [String] = []
 	 private var model = SystemLanguageModel.default
 
 	 var body: some View {
@@ -95,6 +98,9 @@ struct AppleIntelView: View {
 				 .onAppear {
 						attendanceText = exportAttendanceData(context: modelContext)
 				 }
+				 .sheet(isPresented: $wallToggle) {
+						Paywall()
+				 }
 			}
 	 }
 
@@ -115,7 +121,16 @@ struct AppleIntelView: View {
 									.animation(.linear(duration: 1).repeatForever(autoreverses: false), value: isRotating)
 									.onAppear { isRotating = true }
 						} else {
-							 Button{ generateAnswer() } label: {
+							 Button {
+									if subModel.notSubscribed == false {
+										 generateAnswer()
+									} else {
+										 wallToggle.toggle()
+									}
+
+
+
+							 } label: {
 									Text("Send").foregroundStyle(.blue)
 							 }
 						}
@@ -124,16 +139,25 @@ struct AppleIntelView: View {
 				 .padding(.bottom, 5)
 				 ScrollView(.vertical) {
 						VStack(alignment: .leading, spacing: 10) {
-							 Text("AI Answer:")
-									.bold()
-									.padding(.leading, 10)
+							 HStack {
+									Text("AI Answer:")
+										 .bold()
+										 .padding(.leading, 10)
+									Spacer()
+									Text("Clear").font(.footnote).foregroundStyle(.secondary)
+										 .onTapGesture {
+												aiAnswer.removeAll()
+										 }
+							 }
 							 if !aiAnswer.isEmpty {
-									Text(aiAnswer)
-										 .padding()
-										 .background(.ultraThinMaterial)
-										 .cornerRadius(10)
-										 .font(.system(size: 16))
-										 .lineSpacing(6)
+									ForEach(aiAnswer, id: \.self) { answer in
+										 Text(answer)
+												.padding()
+												.background(.ultraThinMaterial)
+												.cornerRadius(10)
+												.font(.system(size: 16))
+												.lineSpacing(6)
+									}
 							 }
 						}
 						.frame(maxWidth: .infinity, alignment: .leading)
@@ -193,14 +217,14 @@ struct AppleIntelView: View {
 						let response = try await session.respond(to: userPrompt, options: options)
 
 						await MainActor.run {
-							 aiAnswer = response.content
+							 aiAnswer.append(response.content)
 							 userPrompt = ""
 							 isLoading = false
 							 isRotating = false
 						}
 				 } catch {
 						await MainActor.run {
-							 aiAnswer = "Error: \(error.localizedDescription)"
+							 aiAnswer.append("Error: \(error.localizedDescription)")
 							 isLoading = false
 							 isRotating = false
 						}
@@ -209,11 +233,6 @@ struct AppleIntelView: View {
 	 }
 }
 
-#Preview {
-	 if #available(iOS 26.0, *) {
-			TheOverview()
-	 } else {
-	 }
-}
+
 
 
