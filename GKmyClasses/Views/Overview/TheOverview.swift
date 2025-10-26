@@ -71,6 +71,8 @@ struct AppleIntelView: View {
 	 @State private var wallToggle: Bool = false
 	 @State private var aiAnswer: [String] = []
 	 private var model = SystemLanguageModel.default
+	 @State private var startDate: Date = Date()
+	 @State private var endDate: Date = Date()
 
 	 var body: some View {
 			NavigationStack {
@@ -108,6 +110,12 @@ struct AppleIntelView: View {
 	 @ViewBuilder
 	 func OverviewPage() -> some View {
 			VStack {
+				 VStack {
+						DatePicker("From", selection: $startDate, displayedComponents: .date)
+						DatePicker("To", selection: $endDate, displayedComponents: .date)
+				 }.padding(.horizontal)
+
+
 				 HStack(spacing: 20) {
 							 TextField("Question on your attendances", text: $userPrompt)
 									.padding(.vertical, 5)
@@ -236,3 +244,7 @@ struct AppleIntelView: View {
 
 
 
+#Preview {
+	 TheOverview()
+
+}

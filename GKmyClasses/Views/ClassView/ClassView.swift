@@ -10,12 +10,13 @@ struct ClassView: View {
 	 var sortedClasses: [ClassModel] {
 			classes.reversed()
 	 }
+	 @State var searchable: String = ""
 
 	 var body: some View {
 			@Bindable var subStatus = subStatus
 			NavigationStack(path: $path) {
 				 List {
-						ForEach(sortedClasses) { item in
+						ForEach(filteredStudent) { item in
 							 NavigationLink(value: item) {
 									VStack(alignment: .leading, spacing: 9) {
 										 Text(item.name)
@@ -27,6 +28,7 @@ struct ClassView: View {
 						}
 						.onDelete(perform: deleteClass)
 				 }
+				 .searchable(text: $searchable)
 				 .navigationTitle("Classes")
 				 .toolbar {
 						ToolbarItem(placement: .topBarTrailing) {
@@ -59,7 +61,16 @@ struct ClassView: View {
 			}
 
 	 }
-
+	 
+	 private var filteredStudent: [ClassModel] {
+			if searchable.isEmpty {
+				 return sortedClasses
+			} else {
+				 return sortedClasses.filter {
+						$0.name.localizedCaseInsensitiveContains(searchable)
+				 }
+			}
+	 }
 	 private func deleteClass(at offsets: IndexSet) {
 			for index in offsets {
 				 let classToDelete = classes[index]

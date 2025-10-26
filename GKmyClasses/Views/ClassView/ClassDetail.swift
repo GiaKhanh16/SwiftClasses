@@ -25,9 +25,7 @@ struct DetailClassView: View {
 	 @State private var startDate: Date = Date()
 	 @State private var paywall: Bool = false
 	 @State private var endDate: Date = Date()
-	 @State private var staffHours: [UUID: Int] = [:]
-	 @State private var staffMinutes: [UUID: Int] = [:]
-
+	 @State private var AISheet: Bool = false
 
 	 private func attendanceIndex(for date: Date) -> Int {
 			if let index = classModel.attendances.firstIndex(where: { Calendar.current.isDate($0.date, inSameDayAs: date) }) {
@@ -246,8 +244,21 @@ struct DetailClassView: View {
 						if subModel.notSubscribed == false {
 							 paywall.toggle()
 						} else {
-							 shareMenu.toggle()
+							 AISheet.toggle()
 						}
+
+				 } label: {
+						Image(systemName: "apple.intelligence")
+				 }
+
+
+
+				 Button {
+//						if subModel.notSubscribed == false {
+//							 paywall.toggle()
+//						} else {
+							 shareMenu.toggle()
+//						}
 
 				 } label: {
 						Image(systemName: "square.and.arrow.up")
@@ -318,6 +329,10 @@ struct DetailClassView: View {
 			.sheet(isPresented: $paywall) {
 				 Paywall()
 			}
+			.sheet(isPresented: $AISheet) {
+				 TheOverview()
+			}
+
 	 }
 
 	 private func deleteClass(_ classModel: ClassModel) {
@@ -349,54 +364,66 @@ struct DetailClassView: View {
 
 	 @MainActor
 	 func exportAttendanceCSV(context: ModelContext, startDate: Date, endDate: Date) -> URL? {
-			let fetchDescriptor = FetchDescriptor<AttendanceModel>()
-			let attendances = (try? context.fetch(fetchDescriptor)) ?? []
-
-				 // Filter by range
+			let targetClassID = classModel.classID
 			let calendar = Calendar.current
-			let filtered = attendances.filter { attendance in
-				 (attendance.date >= calendar.startOfDay(for: startDate)) &&
-				 (attendance.date < calendar.date(byAdding: .day, value: 1, to: endDate)!)
-			}
+			let startOfDay = calendar.startOfDay(for: startDate)
+			let endOfDay = calendar.date(byAdding: .day, value: 1, to: calendar.startOfDay(for: endDate)) ?? endDate
 
+			let fetchDescriptor = FetchDescriptor<AttendanceModel>(
+				 predicate: #Predicate<AttendanceModel> { attendance in
+						attendance.classModel?.classID == targetClassID &&
+						attendance.date >= startOfDay &&
+						attendance.date < endOfDay
+				 }
+			)
+
+  
+			let filtered = (try? context.fetch(fetchDescriptor)) ?? []
 
 			guard !filtered.isEmpty else {
 				 print("No attendance records found in the selected range.")
 				 return nil
 			}
 
-			var csvText = "Class Name,Class Description,Date,Staff,Student Names\n"
+			var csvText = ""
+
+			if let className = filtered.first?.classModel?.name {
+				 csvText += "Class Name: \(className)\n"
+			}
+
+			if let classDesc = filtered.first?.classModel?.classDescription, !classDesc.isEmpty {
+				 csvText += "Description: \(classDesc)\n"
+			}
 			let formatter = DateFormatter()
 			formatter.dateStyle = .short
 			formatter.timeStyle = .none
 
-			let representativeClassName = filtered.first?.classModel?.name ?? "Class"
+
+			csvText += "\nExported range: \(formatter.string(from: startDate)) - \(formatter.string(from: endDate))\n"
+
+			csvText += "\nDate,Staff,Students\n"
+
 
 			for attendance in filtered {
-				 let className = attendance.classModel?.name ?? "Unknown Class"
-				 let classDesc = attendance.classModel?.classDescription ?? ""
 				 let date = formatter.string(from: attendance.date)
-//				 let staff = attendance.staff
-				 let students = attendance.students.map { $0.name }.joined(separator: "; ")
+				 let staffNames = attendance.staffAttendances
+						.compactMap { $0.staff.name }
+						.joined(separator: "; ")
+				 let studentNames = attendance.students
+						.map { $0.name }
+						.joined(separator: "; ")
 
-				 csvText += "\"\(className)\",\"\(classDesc)\",\"\(date)\",\"\(students)\"\n"
+				 csvText += "\"\(date)\",\"\(staffNames)\",\"\(studentNames)\"\n"
 			}
 
-			let summary = "\nExported range: \(formatter.string(from: startDate)) - \(formatter.string(from: endDate))\n"
-			csvText += summary
 
-			let _ = representativeClassName
-				 .replacingOccurrences(of: " ", with: "")
-				 .replacingOccurrences(of: "/", with: "-")
-				 .replacingOccurrences(of: ":", with: "-")
 
 			let monthFormatter = DateFormatter()
 			monthFormatter.dateFormat = "MMM"
 			let monthString = monthFormatter.string(from: startDate)
-
-			let fileName = "AttendanceExport\(monthString).csv"
-			let tempDir = FileManager.default.temporaryDirectory
-			let fileURL = tempDir.appendingPathComponent(fileName)
+			let formatClassName = classModel.name.replacingOccurrences(of: " ", with: "")
+			let fileName = "\(formatClassName)\(monthString).csv"
+			let fileURL = FileManager.default.temporaryDirectory.appendingPathComponent(fileName)
 
 			do {
 				 try csvText.write(to: fileURL, atomically: true, encoding: .utf8)
@@ -407,6 +434,7 @@ struct DetailClassView: View {
 				 return nil
 			}
 	 }
+
 }
 
 
@@ -461,26 +489,6 @@ struct AddStudentView2: View {
 }
 
 
-struct DateTest: View {
-	 @State private var duration: Date = {
-			var calendar = Calendar.current
-			let components = DateComponents(hour: 0, minute: 0)
-			return calendar.date(from: components)!
-	 }()
 
-	 var body: some View {
-			VStack {
-				 DatePicker(
-						"",
-						selection: $duration,
-						displayedComponents: .hourAndMinute
-				 )
-				 .labelsHidden()
-				 .datePickerStyle(.compact)
-				 .environment(\.locale, Locale(identifier: "en_GB"))
-				 .scaleEffect(0.8)
-			}
-	 }
-}
 
 

@@ -10,7 +10,7 @@ struct TabScreen: View {
 						ClassView()
 				 }
 
-				 Tab("Attendees", systemImage: "figure.run") {
+				 Tab("Attendees", systemImage: "table.fill") {
 						StudentView()
 				 }
 				 Tab("Staff", systemImage: "person.3.fill") {

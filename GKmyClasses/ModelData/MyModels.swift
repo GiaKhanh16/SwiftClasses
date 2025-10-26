@@ -83,7 +83,6 @@ class StaffModel {
 	 var name: String
 	 var note: String
 
-			// ✅ Must cascade to satisfy uniqueness constraint rule
 	 @Relationship(deleteRule: .cascade, inverse: \StaffAttendanceModel.staff)
 	 var staffAttendances: [StaffAttendanceModel]
 
