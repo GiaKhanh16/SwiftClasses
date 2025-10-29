@@ -33,7 +33,7 @@ struct DetailClassView: View {
 			} else {
 				 let newAttendance = AttendanceModel(
 						date: date,
-				    students: []
+						students: []
 				 )
 				 classModel.attendances.append(newAttendance)
 				 return classModel.attendances.count - 1
@@ -73,13 +73,11 @@ struct DetailClassView: View {
 
 	 private func toggleStaff(_ staff: StaffModel) {
 			if let existingLinkIndex = filteredAttendance.staffAttendances.firstIndex(
-				 where: { $0.staff.staffID == staff.staffID }
+				 where: { $0.staffIDValue == staff.staffID }
 			) {
-						// Remove existing StaffAttendanceModel link
 				 let existingLink = filteredAttendance.staffAttendances[existingLinkIndex]
 				 filteredAttendance.staffAttendances.remove(at: existingLinkIndex)
 
-						// Also remove it from the staff side
 				 if let staffIndex = staff.staffAttendances.firstIndex(where: { $0.id == existingLink.id }) {
 						staff.staffAttendances.remove(at: staffIndex)
 				 }
@@ -182,7 +180,7 @@ struct DetailClassView: View {
 						if staffString.isEmpty {
 							 ForEach(filteredAttendance.staffAttendances) { staffAttendance in
 									HStack {
-										 Text(staffAttendance.staff.name)
+										 Text(staffAttendance.staffName)
 												.font(.headline)
 										 Spacer()
 										 StaffDurationPicker(
@@ -199,7 +197,9 @@ struct DetailClassView: View {
 										 Text(staff.name)
 												.font(.headline)
 										 Spacer()
-										 if let link = filteredAttendance.staffAttendances.first(where: { $0.staff.staffID == staff.staffID }) {
+										 if let link = filteredAttendance.staffAttendances.first(
+												where: { $0.staffIDValue == staff.staffID
+												}) {
 												StaffDurationPicker(staffAttendance: link)
 										 }
 
@@ -208,13 +208,20 @@ struct DetailClassView: View {
 													 toggleStaff(staff)
 												}
 										 } label: {
-												Image(systemName:
-																 filteredAttendance.staffAttendances.contains(where: { $0.staff.staffID == staff.staffID })
-															? "checkmark.circle.fill"
-															: "circle"
+												Image(
+													 systemName:
+															filteredAttendance.staffAttendances
+															.contains(
+																 where: { $0.staffIDValue == staff.staffID
+																 })
+													 ? "checkmark.circle.fill"
+													 : "circle"
 												)
 												.foregroundColor(
-													 filteredAttendance.staffAttendances.contains(where: { $0.staff.staffID == staff.staffID })
+													 filteredAttendance.staffAttendances
+															.contains(
+																 where: { $0.staffIDValue == staff.staffID
+																 })
 													 ? .green
 													 : .gray
 												)
@@ -241,11 +248,11 @@ struct DetailClassView: View {
 			.navigationTitle("Details")
 			.toolbar {
 				 Button {
-						if subModel.notSubscribed == false {
-							 paywall.toggle()
-						} else {
-							 AISheet.toggle()
-						}
+							 //						if subModel.notSubscribed == false {
+							 //							 paywall.toggle()
+							 //						} else {
+						AISheet.toggle()
+							 //						}
 
 				 } label: {
 						Image(systemName: "apple.intelligence")
@@ -254,11 +261,11 @@ struct DetailClassView: View {
 
 
 				 Button {
-//						if subModel.notSubscribed == false {
-//							 paywall.toggle()
-//						} else {
-							 shareMenu.toggle()
-//						}
+							 //						if subModel.notSubscribed == false {
+							 //							 paywall.toggle()
+							 //						} else {
+						shareMenu.toggle()
+							 //						}
 
 				 } label: {
 						Image(systemName: "square.and.arrow.up")
@@ -330,18 +337,26 @@ struct DetailClassView: View {
 				 Paywall()
 			}
 			.sheet(isPresented: $AISheet) {
-				 TheOverview()
+				 TheOverview(exportType: .classAttendance(classModel))
 			}
 
 	 }
-
 	 private func deleteClass(_ classModel: ClassModel) {
+			for attendance in classModel.attendances {
+				 for student in attendance.students {
+						if let index = student.attendances.firstIndex(where: { $0.id == attendance.id }) {
+							 student.attendances.remove(at: index)
+						}
+				 }
+			}
+
+			modelContext.delete(classModel)
+
 			do {
-				 modelContext.delete(classModel)
 				 try modelContext.save()
 				 dismiss()
 			} catch {
-				 print(error)
+				 print("Failed to delete class: \(error)")
 			}
 	 }
 
@@ -357,28 +372,20 @@ struct DetailClassView: View {
 	 }
 
 	 private var staffList: [StaffModel] {
-				 return staffs.filter {
-						$0.name.localizedCaseInsensitiveContains(staffString)
+			return staffs.filter {
+				 $0.name.localizedCaseInsensitiveContains(staffString)
 			}
 	 }
 
 	 @MainActor
 	 func exportAttendanceCSV(context: ModelContext, startDate: Date, endDate: Date) -> URL? {
-			let targetClassID = classModel.classID
 			let calendar = Calendar.current
 			let startOfDay = calendar.startOfDay(for: startDate)
 			let endOfDay = calendar.date(byAdding: .day, value: 1, to: calendar.startOfDay(for: endDate)) ?? endDate
 
-			let fetchDescriptor = FetchDescriptor<AttendanceModel>(
-				 predicate: #Predicate<AttendanceModel> { attendance in
-						attendance.classModel?.classID == targetClassID &&
-						attendance.date >= startOfDay &&
-						attendance.date < endOfDay
-				 }
-			)
-
-  
-			let filtered = (try? context.fetch(fetchDescriptor)) ?? []
+			let filtered = classModel.attendances.filter {
+				 $0.date >= startOfDay && $0.date < endOfDay
+			}
 
 			guard !filtered.isEmpty else {
 				 print("No attendance records found in the selected range.")
@@ -407,11 +414,15 @@ struct DetailClassView: View {
 			for attendance in filtered {
 				 let date = formatter.string(from: attendance.date)
 				 let staffNames = attendance.staffAttendances
-						.compactMap { $0.staff.name }
+						.compactMap { $0.staffName }
 						.joined(separator: "; ")
 				 let studentNames = attendance.students
 						.map { $0.name }
 						.joined(separator: "; ")
+
+				 if staffNames.isEmpty && studentNames.isEmpty {
+						continue
+				 }
 
 				 csvText += "\"\(date)\",\"\(staffNames)\",\"\(studentNames)\"\n"
 			}

@@ -10,7 +10,8 @@ import StoreKit
 
 @Observable
 class SubscriptionStatus {
-	 var notSubscribed: Bool = false
+	 var isSubscribed: Bool = false
+	 var payWallToggle: Bool { !isSubscribed }
 }
 
 

@@ -1,13 +1,7 @@
-//
-//  GKmyClassesApp.swift
-//  GKmyClasses
-//
-//  Created by Khanh Nguyen on 10/6/25.
-//
-
 import SwiftUI
 import SwiftData
 import StoreKit
+
 @main
 struct GKmyClassesApp: App {
 	 @State private var subStatus = SubscriptionStatus()
@@ -20,19 +14,31 @@ struct GKmyClassesApp: App {
 								 guard case .success(let verificationResult) = result,
 											 case .success(_) = verificationResult else { return }
 
-								 subStatus.notSubscribed = false
+								 subStatus.isSubscribed = true
 							}
-							.subscriptionStatusTask(for: "96E04A5E") { taskState in
-								 let _ = taskState.map { statues in
-										if statues.isEmpty {
-											 subStatus.notSubscribed = true
+							.subscriptionStatusTask(for: "21818455") { taskState in
+
+										if let value = taskState.value {
+											 subStatus.isSubscribed = !value
+													.filter { $0.state != .revoked && $0.state != .expired }
+													.isEmpty
 										} else {
+											 subStatus.isSubscribed = false
+											 }
+							}
+							.task {
+								 for await verificationResult in Transaction.updates {
+										guard case .verified(let transaction) = verificationResult else { continue }
 
+										if transaction.productType == .autoRenewable {
+											 subStatus.isSubscribed = true
 										}
-								 }
 
+										await transaction.finish()
+								 }
 							}
         }
+			 
 				.modelContainer(container)
 				.environment(subStatus)
     }

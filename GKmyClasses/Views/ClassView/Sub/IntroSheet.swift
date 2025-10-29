@@ -37,13 +37,13 @@ struct IntroScreen: View {
 						PointView(symbol: "list.bullet.clipboard", title: "Manage Attendances", subTitle: "Manage classes, students and staff.")
 							 .blurSlide(animatePoints[0])
 
-						PointView(symbol: "apple.intelligence", title: "Apple Intelligence", subTitle: "Ask Apple Intelligence question on your attendances.")
+						PointView(symbol: "apple.intelligence", title: "Apple Intelligence", subTitle: "Ask Apple Intelligence questions on your attendances.")
 							 .blurSlide(animatePoints[1])
 
-						PointView(symbol: "square.and.arrow.up", title: "Collaboration", subTitle: "Export into PDF or CSV file.")
+						PointView(symbol: "square.and.arrow.up", title: "Collaboration", subTitle: "Export into CSV file.")
 							 .blurSlide(animatePoints[2])
 
-						PointView(symbol: "lock.circle.dotted", title: "Data Privacy", subTitle: "All data is secured on your iCloud.")
+						PointView(symbol: "lock.circle.dotted", title: "Data Privacy", subTitle: "All data is secured on your local machine.")
 							 .blurSlide(animatePoints[2])
 				 }
 				 .frame(maxWidth: .infinity, alignment: .leading)

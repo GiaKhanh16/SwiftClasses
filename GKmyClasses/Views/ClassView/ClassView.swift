@@ -14,6 +14,7 @@ struct ClassView: View {
 
 	 var body: some View {
 			@Bindable var subStatus = subStatus
+
 			NavigationStack(path: $path) {
 				 List {
 						ForEach(filteredStudent) { item in
@@ -26,7 +27,6 @@ struct ClassView: View {
 									}
 							 }
 						}
-						.onDelete(perform: deleteClass)
 				 }
 				 .searchable(text: $searchable)
 				 .navigationTitle("Classes")
@@ -54,10 +54,14 @@ struct ClassView: View {
 						DetailClassView(classModel: classModel)
 							 .toolbar(.hidden, for: .tabBar)
 				 }
-				 .sheet(isPresented: $subStatus.notSubscribed) {
-						Paywall()
-							 .interactiveDismissDisabled()
-				 }
+//				 .sheet(isPresented: Binding(
+//						get: { !subStatus.isSubscribed },
+//						set: { _ in }   // ignore changes on dismiss
+//				 )) {
+//						Paywall()
+//							 .interactiveDismissDisabled()
+//				 }
+
 			}
 
 	 }
@@ -71,17 +75,10 @@ struct ClassView: View {
 				 }
 			}
 	 }
-	 private func deleteClass(at offsets: IndexSet) {
-			for index in offsets {
-				 let classToDelete = classes[index]
-				 modelContext.delete(classToDelete)
-			}
-			try? modelContext.save()
-	 }
 }
 
 struct Paywall: View {
-	 static let subscriptionGroupID = "96E04A5E"
+	 static let subscriptionGroupID = "21818455"
 
 	 var body: some View {
 			SubscriptionStoreView(groupID: Self.subscriptionGroupID) {

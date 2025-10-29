@@ -55,7 +55,7 @@
          referenceType = "1">
       </LocationScenarioReference>
       <StoreKitConfigurationFileReference
-         identifier = "../../GKmyClasses/localConfig.storekit">
+         identifier = "../../Full Access.storekit">
       </StoreKitConfigurationFileReference>
    </LaunchAction>
    <ProfileAction

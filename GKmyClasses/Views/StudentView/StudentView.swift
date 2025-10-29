@@ -133,7 +133,7 @@ struct StudentDetailView: View {
 				 .listSectionSpacing(.custom(0))
 				 .navigationTitle("Details")
 				 .sheet(isPresented: $AISheet) {
-						TheOverview()
+						TheOverview(exportType: .student(student))
 				 }
 				 .toolbar {
 
@@ -183,11 +183,11 @@ struct StudentDetailView: View {
 						}
 
 						Button {
-							 if subModel.notSubscribed == false {
-									paywall.toggle()
-							 } else {
+//							 if subModel.notSubscribed == false {
+//									paywall.toggle()
+//							 } else {
 									exportMenu.toggle()
-							 }
+//							 }
 
 						} label: {
 							 Image(systemName: "square.and.arrow.up")
@@ -268,56 +268,45 @@ struct StudentDetailView: View {
 			}
 	 }
 
-
 	 @MainActor
 	 private func exportAttendanceCSV(context: ModelContext, startDate: Date, endDate: Date) -> URL? {
-			let fetchDescriptor = FetchDescriptor<AttendanceModel>()
-			let attendances = (try? context.fetch(fetchDescriptor)) ?? []
-
-				 // Filter by range
 			let calendar = Calendar.current
-			let filtered = attendances.filter { attendance in
-				 (attendance.date >= calendar.startOfDay(for: startDate)) &&
-				 (attendance.date < calendar.date(byAdding: .day, value: 1, to: endDate)!)
-			}
+			let start = calendar.startOfDay(for: startDate)
+			let end = calendar.date(byAdding: .day, value: 1, to: calendar.startOfDay(for: endDate))!
 
+				 // Filter and sort attendances
+			let filteredAttendances = student.attendances
+				 .filter { $0.date >= start && $0.date < end }
+				 .sorted(by: { $0.date > $1.date })
 
-			guard !filtered.isEmpty else {
+			guard !filteredAttendances.isEmpty else {
 				 print("No attendance records found in the selected range.")
 				 return nil
 			}
 
-			var csvText = "Class Name,Class Description,Date,Staff,Student Names\n"
 			let formatter = DateFormatter()
 			formatter.dateStyle = .short
 			formatter.timeStyle = .none
 
-			let representativeClassName = filtered.first?.classModel?.name ?? "Class"
+				 // CSV header
+			var csvText = "Student: \(student.name)\n"
+			csvText += "Exported Range: \(formatter.string(from: startDate)) - \(formatter.string(from: endDate))\n\n"
+			csvText += "Class Name,Date\n"
 
-			for attendance in filtered {
-				 let className = attendance.classModel?.name ?? "Unknown Class"
-				 let classDesc = attendance.classModel?.classDescription ?? ""
-				 let date = formatter.string(from: attendance.date)
-				 let students = attendance.students.map { $0.name }.joined(separator: "; ")
-
-				 csvText += "\"\(className)\",\"\(classDesc)\",\"\(date)\",\"\(students)\"\n"
+				 // Add attendance rows
+			for attendance in filteredAttendances {
+				 let className = attendance.classModel?.name ?? ""
+				 let dateString = formatter.string(from: attendance.date)
+				 csvText += "\"\(className)\",\"\(dateString)\"\n"
 			}
 
-			let summary = "\nExported range: \(formatter.string(from: startDate)) - \(formatter.string(from: endDate))\n"
-			csvText += summary
-
-			let _ = representativeClassName
-				 .replacingOccurrences(of: " ", with: "")
-				 .replacingOccurrences(of: "/", with: "-")
-				 .replacingOccurrences(of: ":", with: "-")
-
+				 // Filename
 			let monthFormatter = DateFormatter()
-			monthFormatter.dateFormat = "MMM"
+			monthFormatter.dateFormat = "MMM-yyyy"
 			let monthString = monthFormatter.string(from: startDate)
-
-			let fileName = "AttendanceExport\(monthString).csv"
-			let tempDir = FileManager.default.temporaryDirectory
-			let fileURL = tempDir.appendingPathComponent(fileName)
+			let safeStudentName = student.name.replacingOccurrences(of: " ", with: "")
+			let fileName = "\(safeStudentName)\(monthString).csv"
+			let fileURL = FileManager.default.temporaryDirectory.appendingPathComponent(fileName)
 
 			do {
 				 try csvText.write(to: fileURL, atomically: true, encoding: .utf8)
@@ -328,6 +317,8 @@ struct StudentDetailView: View {
 				 return nil
 			}
 	 }
+
+
 }
 
 

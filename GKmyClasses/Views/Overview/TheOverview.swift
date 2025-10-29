@@ -2,14 +2,23 @@ import SwiftUI
 import SwiftData
 import FoundationModels
 
-struct TheOverview: View {
+	 // MARK: - DataSourceType Enum
+enum DataSourceType {
+	 case staff(StaffModel)
+	 case student(StudentModel)
+	 case classAttendance(ClassModel)
+}
 
+	 // MARK: - Overview Entry Point
+struct TheOverview: View {
+	 var exportType: DataSourceType
 	 @Environment(\.modelContext) private var modelContext
+
 	 var body: some View {
 			NavigationStack {
 				 Group {
 						if #available(iOS 26.0, *) {
-							 AppleIntelView()
+							 AppleIntelView(exportType: exportType)
 						} else {
 							 VStack(spacing: 20) {
 									Image(systemName: "exclamationmark.triangle.fill")
@@ -24,55 +33,29 @@ struct TheOverview: View {
 						}
 				 }
 				 .navigationTitle("Overview")
-
-			}
-	 }
-	 
-	 func exportAttendanceCSV(context: ModelContext) -> URL? {
-			let fetchDescriptor = FetchDescriptor<AttendanceModel>()
-			let attendances = (try? context.fetch(fetchDescriptor)) ?? []
-
-			var csvText = "Date,Student Names\n"
-
-			let formatter = DateFormatter()
-			formatter.dateStyle = .short
-			formatter.timeStyle = .none
-
-			for attendance in attendances {
-				 let dateString = formatter.string(from: attendance.date)
-				 let studentNames = attendance.students.map { $0.name }.joined(separator: "; ")
-				 csvText += "\"\(dateString)\",\"\(studentNames)\"\n"
-			}
-
-			let fileName = "AttendanceExport.csv"
-			let tempDir = FileManager.default.temporaryDirectory
-			let fileURL = tempDir.appendingPathComponent(fileName)
-
-			do {
-				 try csvText.write(to: fileURL, atomically: true, encoding: .utf8)
-				 return fileURL
-			} catch {
-				 print("Failed to create CSV file: \(error)")
-				 return nil
 			}
 	 }
 }
 
+	 // MARK: - AppleIntelView
 @available(iOS 26.0, *)
 struct AppleIntelView: View {
 	 @Environment(SubscriptionStatus.self) var subModel
 	 @Environment(\.modelContext) private var modelContext
-	 @State var userPrompt: String = ""
-	 @State private var attendanceText: String = ""
-//	 @State private var aiAnswer: String = ""
-	 @State private var isLoading: Bool = false
-	 @State private var isRotating = false
-	 @State private var selectedTab: Int = 0
-	 @State private var wallToggle: Bool = false
-	 @State private var aiAnswer: [String] = []
-	 private var model = SystemLanguageModel.default
-	 @State private var startDate: Date = Date()
-	 @State private var endDate: Date = Date()
+
+	 @State  var userPrompt: String = ""
+	 @State  var attendanceText: String = ""
+	 @State  var isLoading: Bool = false
+	 @State  var isRotating: Bool = false
+	 @State  var wallToggle: Bool = false
+	 @State  var aiAnswer: [String] = []
+	 @State  var startDate: Date = Date()
+	 @State  var endDate: Date = Date()
+	 @State  var isNil: Bool = false
+
+	  var exportVM = AttendanceExportViewModel()
+	  var model = SystemLanguageModel.default
+	 var exportType: DataSourceType
 
 	 var body: some View {
 			NavigationStack {
@@ -80,71 +63,63 @@ struct AppleIntelView: View {
 						switch model.availability {
 							 case .available:
 									OverviewPage()
-										 .onAppear {
-												attendanceText = exportAttendanceData(context: modelContext)
-										 }
-
-							 case .unavailable(.deviceNotEligible):
-									UnavailableView(message: "Your device is not eligible for Apple Intelligence.")
-
-							 case .unavailable(.appleIntelligenceNotEnabled):
-									UnavailableView(message: "Please enable Apple Intelligence in Settings to use this feature.")
-
-							 case .unavailable(.modelNotReady):
-									UnavailableView(message: "The AI model is not ready yet. It may be downloading or initializing.")
-
-							 case .unavailable(let other):
-									UnavailableView(message: "AI unavailable: \(other)")
+							 case .unavailable(let reason):
+									UnavailableView(message: "AI unavailable: \(reason)")
 						}
 				 }
-				 .onAppear {
-						attendanceText = exportAttendanceData(context: modelContext)
-				 }
-				 .sheet(isPresented: $wallToggle) {
-						Paywall()
-				 }
+				 .sheet(isPresented: $wallToggle) { Paywall() }
 			}
 	 }
 
-			// MARK: - Overview Tab
+			// MARK: - OverviewPage
 	 @ViewBuilder
 	 func OverviewPage() -> some View {
 			VStack {
 				 VStack {
 						DatePicker("From", selection: $startDate, displayedComponents: .date)
 						DatePicker("To", selection: $endDate, displayedComponents: .date)
-				 }.padding(.horizontal)
+				 }
+				 .padding()
 
+						// Compute attendance text locally (no state mutation)
+				 let attendanceOutput = exportAttendanceData(startDate: startDate, endDate: endDate)
+
+				 if let answer = attendanceOutput {
+							 Text(answer)
+				 } else {
+						Text("No attendance data available in this range.")
+							 .foregroundStyle(.secondary)
+							 .padding()
+				 }
 
 				 HStack(spacing: 20) {
-							 TextField("Question on your attendances", text: $userPrompt)
-									.padding(.vertical, 5)
-									.padding(.leading, 15)
-									.glassEffect()
+						TextField("Question on your attendances", text: $userPrompt)
+							 .padding(.vertical, 5)
+							 .padding(.leading, 15)
+							 .glassEffect()
 
 						if isLoading {
 							 Image(systemName: "apple.intelligence")
 									.font(.title2)
 									.rotationEffect(.degrees(isRotating ? 360 : 0))
-									.animation(.linear(duration: 1).repeatForever(autoreverses: false), value: isRotating)
+									.animation(.linear(duration: 1)
+										 .repeatForever(autoreverses: false), value: isRotating)
 									.onAppear { isRotating = true }
 						} else {
 							 Button {
-									if subModel.notSubscribed == false {
+										 attendanceText = attendanceOutput ?? "No Data"
 										 generateAnswer()
-									} else {
-										 wallToggle.toggle()
-									}
-
-
-
 							 } label: {
-									Text("Send").foregroundStyle(.blue)
+									Text("Send")
+										 .foregroundStyle(.blue)
 							 }
+									// 👇 disable when no data
+							 .disabled(attendanceOutput == nil)
 						}
 				 }
 				 .padding(.horizontal, 15)
 				 .padding(.bottom, 5)
+
 				 ScrollView(.vertical) {
 						VStack(alignment: .leading, spacing: 10) {
 							 HStack {
@@ -152,11 +127,12 @@ struct AppleIntelView: View {
 										 .bold()
 										 .padding(.leading, 10)
 									Spacer()
-									Text("Clear").font(.footnote).foregroundStyle(.secondary)
-										 .onTapGesture {
-												aiAnswer.removeAll()
-										 }
+									Text("Clear")
+										 .font(.footnote)
+										 .foregroundStyle(.secondary)
+										 .onTapGesture { aiAnswer.removeAll() }
 							 }
+
 							 if !aiAnswer.isEmpty {
 									ForEach(aiAnswer, id: \.self) { answer in
 										 Text(answer)
@@ -171,9 +147,12 @@ struct AppleIntelView: View {
 						.frame(maxWidth: .infinity, alignment: .leading)
 						.padding()
 				 }
-			}.padding(.top, 20)
+			}
+			.padding(.top, 20)
 	 }
 
+
+			// MARK: - UnavailableView
 	 @ViewBuilder
 	 func UnavailableView(message: String) -> some View {
 			VStack(spacing: 20) {
@@ -188,39 +167,32 @@ struct AppleIntelView: View {
 			.padding()
 	 }
 
-	 func exportAttendanceData(context: ModelContext) -> String {
-			let fetchDescriptor = FetchDescriptor<AttendanceModel>()
-			let attendances = (try? context.fetch(fetchDescriptor)) ?? []
-
-			let formatter = DateFormatter()
-			formatter.dateStyle = .long
-			formatter.timeStyle = .none
-
-			var summary = ""
-			for attendance in attendances {
-				 let studentNames = attendance.students.map { $0.name }.joined(separator: ", ")
-				 let dateString = formatter.string(from: attendance.date)
-				 summary += "Attendance Date: \(dateString) — Attendance Names: \(studentNames)\n"
+	 private func exportAttendanceData(startDate: Date, endDate: Date) -> String? {
+			switch exportType {
+				 case .staff(let staff):
+						return exportVM.exportStaffAttendanceText(for: staff, startDate: startDate, endDate: endDate)
+				 case .student(let student):
+						return exportVM.exportStudentAttendanceText(for: student, startDate: startDate, endDate: endDate)
+				 case .classAttendance(let classModel):
+						return exportVM.exportClassAttendanceText(for: classModel, startDate: startDate, endDate: endDate)
 			}
-			return summary
 	 }
-
-
-
-	 func generateAnswer() {
+			// MARK: - Generate AI Answer
+	 private func generateAnswer() {
 			isLoading = true
 			isRotating = false
+
 			Task {
 				 do {
 						let instructions = """
-								You are an attendance assistant. 
-								Here is the attendance record in structured format: 
+								You are an attendance assistant.
+								Here is the attendance record:
 								\(attendanceText)
 								
 								Instructions:
-								- Search the record and answer freely and confidently.
+								- Search the record and answer informatively and confidently.
 								"""
-						let options = GenerationOptions(temperature: 2.0)
+						let options = GenerationOptions(temperature: 1.0)
 						let session = LanguageModelSession(instructions: instructions)
 						let response = try await session.respond(to: userPrompt, options: options)
 
@@ -239,12 +211,4 @@ struct AppleIntelView: View {
 				 }
 			}
 	 }
-}
-
-
-
-
-#Preview {
-	 TheOverview()
-
 }

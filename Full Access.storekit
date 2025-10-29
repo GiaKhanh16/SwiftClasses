@@ -9,7 +9,7 @@
       }
     ]
   },
-  "identifier" : "8C9CF7E3",
+  "identifier" : "0DC5ADDA",
   "nonRenewingSubscriptions" : [
 
   ],
@@ -17,11 +17,14 @@
 
   ],
   "settings" : {
+    "_applicationInternalID" : "6753855564",
     "_askToBuyEnabled" : false,
     "_billingGracePeriodEnabled" : false,
     "_billingIssuesEnabled" : false,
+    "_developerTeamID" : "F858BJS7R5",
     "_disableDialogs" : false,
     "_failTransactionsEnabled" : false,
+    "_lastSynchronizedDate" : 783379441.34988594,
     "_locale" : "en_US",
     "_renewalBillingIssuesEnabled" : false,
     "_storefront" : "USA",
@@ -32,11 +35,11 @@
   },
   "subscriptionGroups" : [
     {
-      "id" : "96E04A5E",
+      "id" : "21818455",
       "localizations" : [
 
       ],
-      "name" : "Monthly Sub",
+      "name" : "Full Access",
       "subscriptions" : [
         {
           "adHocOffers" : [
@@ -48,19 +51,19 @@
           "displayPrice" : "4.99",
           "familyShareable" : false,
           "groupNumber" : 1,
-          "internalID" : "855C2484",
+          "internalID" : "6754614668",
           "introductoryOffer" : null,
           "localizations" : [
             {
-              "description" : "Monthly $4.99 Full Access",
+              "description" : "Full Access to all app features",
               "displayName" : "Full Access",
               "locale" : "en_US"
             }
           ],
-          "productID" : "monthly4.99",
+          "productID" : "FullAccessMonthly",
           "recurringSubscriptionPeriod" : "P1M",
-          "referenceName" : "Monthly Subcription",
-          "subscriptionGroupID" : "96E04A5E",
+          "referenceName" : "Full Access",
+          "subscriptionGroupID" : "21818455",
           "type" : "RecurringSubscription",
           "winbackOffers" : [
 

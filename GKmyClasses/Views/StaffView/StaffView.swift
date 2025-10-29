@@ -79,7 +79,7 @@ struct StaffDetailView: View {
 			let end = calendar.date(byAdding: .day, value: 1, to: calendar.startOfDay(for: tempEndDate))!
 
 			let filteredAttendances = staff.staffAttendances.filter { staffAttendance in
-				 let date = staffAttendance.attendance.date
+				 let date = staffAttendance.attendanceDate
 				 return date >= start && date < end
 			}
 
@@ -105,12 +105,12 @@ struct StaffDetailView: View {
 						Section("History") {
 									// 1. Sort by date (latest first)
 							 let sortedAttendances = staff.staffAttendances.sorted {
-									$0.attendance.date > $1.attendance.date
+									$0.attendanceDate > $1.attendanceDate
 							 }
 
 									// 2. Filter by active range
 							 let filteredAttendances = sortedAttendances.filter { staffAttendance in
-									let date = staffAttendance.attendance.date
+									let date = staffAttendance.attendanceDate
 									return date >= startDate && date <= endDate
 							 }
 
@@ -123,20 +123,18 @@ struct StaffDetailView: View {
 										 .foregroundStyle(.secondary)
 							 } else {
 									ForEach(displayedAttendances) { staffAttendance in
-										 let attendance = staffAttendance.attendance
-										 if let classModel = attendance.classModel {
-												HStack {
-													 VStack(alignment: .leading, spacing: 4) {
-															Text(classModel.name)
-																 .font(.headline)
-															Text(attendance.date, style: .date)
-																 .font(.subheadline)
-																 .foregroundStyle(.secondary)
-													 }
-													 Spacer()
-													 StaffDurationPicker(staffAttendance: staffAttendance)
+										 HStack {
+												VStack(alignment: .leading, spacing: 4) {
+													 Text(staffAttendance.className)
+															.font(.headline)
+													 Text(staffAttendance.attendanceDate, style: .date)
+															.font(.subheadline)
+															.foregroundStyle(.secondary)
 												}
+												Spacer()
+												StaffDurationPicker(staffAttendance: staffAttendance)
 										 }
+
 									}
 							 }
 
@@ -268,7 +266,7 @@ struct StaffDetailView: View {
 							 }
 						}
 						.sheet(isPresented: $AISheet) {
-							 TheOverview()
+							 TheOverview(exportType: .staff(staff))
 						}
 				 }
 			}
@@ -290,11 +288,10 @@ struct StaffDetailView: View {
 			let start = calendar.startOfDay(for: startDate)
 			let end = calendar.date(byAdding: .day, value: 1, to: calendar.startOfDay(for: endDate))!
 
-				 // Filter and sort attendances exactly like your UI Section
 			let filteredAttendances = staff.staffAttendances
-				 .sorted { $0.attendance.date > $1.attendance.date }
+				 .sorted { $0.attendanceDate > $1.attendanceDate }
 				 .filter { staffAttendance in
-						let date = staffAttendance.attendance.date
+						let date = staffAttendance.attendanceDate
 						return date >= start && date < end
 				 }
 
@@ -310,11 +307,9 @@ struct StaffDetailView: View {
 			formatter.timeStyle = .none
 
 			for staffAttendance in filteredAttendances {
-				 let attendance = staffAttendance.attendance
-				 let className = attendance.classModel?.name ?? "Unknown Class"
-				 let date = formatter.string(from: attendance.date)
+				 let className = staffAttendance.className
+				 let date = formatter.string(from: staffAttendance.attendanceDate)
 				 let duration = String(format: "%.2f", Double(staffAttendance.hour) + Double(staffAttendance.minute)/60.0)
-
 				 csvText += "\"\(className)\",\"\(date)\",\"\(duration)\"\n"
 			}
 
