@@ -85,7 +85,7 @@ struct AppleIntelView: View {
 				 let attendanceOutput = exportAttendanceData(startDate: startDate, endDate: endDate)
 
 				 if let answer = attendanceOutput {
-							 Text(answer)
+						
 				 } else {
 						Text("No attendance data available in this range.")
 							 .foregroundStyle(.secondary)

@@ -104,6 +104,7 @@ struct DetailClassView: View {
 
 
 	 var body: some View {
+			@Bindable var subModel = subModel
 			Form {
 				 Section {
 						TextField("Advance morning class", text: $classModel.name)
@@ -248,11 +249,12 @@ struct DetailClassView: View {
 			.navigationTitle("Details")
 			.toolbar {
 				 Button {
-							 //						if subModel.notSubscribed == false {
-							 //							 paywall.toggle()
-							 //						} else {
-						AISheet.toggle()
-							 //						}
+						if subModel.isSubscribed == false {
+							 subModel.payWallToggle.toggle()
+						} else {
+							 AISheet.toggle()
+						}
+
 
 				 } label: {
 						Image(systemName: "apple.intelligence")
@@ -261,11 +263,11 @@ struct DetailClassView: View {
 
 
 				 Button {
-							 //						if subModel.notSubscribed == false {
-							 //							 paywall.toggle()
-							 //						} else {
-						shareMenu.toggle()
-							 //						}
+						if subModel.isSubscribed == false {
+							 subModel.payWallToggle.toggle()
+						} else {
+							 shareMenu.toggle()
+						}
 
 				 } label: {
 						Image(systemName: "square.and.arrow.up")
@@ -333,7 +335,7 @@ struct DetailClassView: View {
 						toggleStudent(newStudent)
 				 }
 			}
-			.sheet(isPresented: $paywall) {
+			.sheet(isPresented: $subModel.payWallToggle) {
 				 Paywall()
 			}
 			.sheet(isPresented: $AISheet) {

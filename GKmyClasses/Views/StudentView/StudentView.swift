@@ -35,7 +35,6 @@ struct StudentView: View {
 				 .searchable(text: $searchable)
 				 .sheet(isPresented: $addStudentBool) {
 						AddStudentView()
-
 				 }
 			}
 	 }
@@ -79,6 +78,7 @@ struct StudentDetailView: View {
 	 @State private var AISheet: Bool = false
 
 	 var body: some View {
+			@Bindable var subModel = subModel
 			VStack {
 				 Form {
 						Section("Name") {
@@ -122,7 +122,6 @@ struct StudentDetailView: View {
 									}
 							 }
 
-									// 5. Show More
 							 if filteredAttendances.count > displayedCount {
 									Button("Show More") {
 										 displayedCount += 5
@@ -135,11 +134,17 @@ struct StudentDetailView: View {
 				 .sheet(isPresented: $AISheet) {
 						TheOverview(exportType: .student(student))
 				 }
+				 .sheet(isPresented: $subModel.payWallToggle) {
+						Paywall()
+				 }
 				 .toolbar {
 
 						Button {
+							 if subModel.isSubscribed == false {
+									subModel.payWallToggle.toggle()
+							 } else {
 									AISheet.toggle()
-
+							 }
 						} label: {
 							 Image(systemName: "apple.intelligence")
 						}
@@ -183,11 +188,11 @@ struct StudentDetailView: View {
 						}
 
 						Button {
-//							 if subModel.notSubscribed == false {
-//									paywall.toggle()
-//							 } else {
+							 if subModel.isSubscribed == false {
+									subModel.payWallToggle.toggle()
+							 } else {
 									exportMenu.toggle()
-//							 }
+							 }
 
 						} label: {
 							 Image(systemName: "square.and.arrow.up")

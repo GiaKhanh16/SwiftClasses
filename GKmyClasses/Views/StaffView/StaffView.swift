@@ -92,6 +92,7 @@ struct StaffDetailView: View {
 
 
 	 var body: some View {
+			@Bindable var subModel = subModel
 			VStack {
 				 Form {
 						Section("Name") {
@@ -151,7 +152,11 @@ struct StaffDetailView: View {
 				 .toolbar {
 
 						Button {
+							 if subModel.isSubscribed == false {
+									paywall.toggle()
+							 } else {
 									AISheet.toggle()
+							 }
 						} label: {
 							 Image(systemName: "apple.intelligence")
 						}
@@ -198,11 +203,11 @@ struct StaffDetailView: View {
 						}
 
 						Button {
-//							 if subModel.notSubscribed == false {
-//									paywall.toggle()
-//							 } else {
+							 if subModel.isSubscribed == false {
+									subModel.payWallToggle.toggle()
+							 } else {
 									exportMenu.toggle()
-//							 }
+							 }
 
 						} label: {
 							 Image(systemName: "square.and.arrow.up")
@@ -268,6 +273,10 @@ struct StaffDetailView: View {
 						.sheet(isPresented: $AISheet) {
 							 TheOverview(exportType: .staff(staff))
 						}
+						.sheet(isPresented: $subModel.payWallToggle) {
+							 Paywall()
+						}
+
 				 }
 			}
 	 }

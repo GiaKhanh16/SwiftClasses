@@ -15,6 +15,7 @@ struct GKmyClassesApp: App {
 											 case .success(_) = verificationResult else { return }
 
 								 subStatus.isSubscribed = true
+								 subStatus.payWallToggle = false
 							}
 							.subscriptionStatusTask(for: "21818455") { taskState in
 
